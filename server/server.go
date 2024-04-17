@@ -2,11 +2,13 @@ package server
 
 import (
 	"fmt"
+	_ "ypeskov/go_hillel_9/docs"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/logger"
 	"ypeskov/go_hillel_9/server/routes"
 
 	"github.com/labstack/echo/v4"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 type Server struct {
@@ -17,6 +19,10 @@ type Server struct {
 
 func New(cfg *config.Config, handlers *routes.Routes) *Server {
 	e := echo.New()
+
+	// e.Use(middleware.Logger())
+
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	itemsGroup := e.Group("/items")
 	handlers.RegisterItemsRoutes(itemsGroup)

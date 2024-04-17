@@ -7,7 +7,7 @@ import (
 )
 
 type Config struct {
-	Port     string `env:"PORT" envDefault:":6000"`
+	Port     string `env:"PORT" envDefault:":3000"`
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 }
 
