@@ -7,6 +7,13 @@ type Error struct {
 	Message string
 }
 
+func NewError(code, message string) *Error {
+	return &Error{
+		Code:    code,
+		Message: message,
+	}
+}
+
 func (e Error) Error() string {
 	return fmt.Sprintf("Code: %s. Message: %s", e.Code, e.Message)
 }
