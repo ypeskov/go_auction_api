@@ -19,12 +19,22 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 
 func (r *Routes) getItemsList(c echo.Context) error {
 	r.Log.Info("Get items list")
-	return c.JSON(http.StatusOK, &models.Item{
-		ID:           rand.Intn(999_999) + 1,
-		Title:        "Item 1",
-		InitialPrice: 100,
-		Description:  "Description of item 1",
-	})
+	items := []*models.Item{
+		{
+			ID:           rand.Intn(999_999) + 1,
+			Title:        "Item 1",
+			InitialPrice: 100,
+			Description:  "Description of item 1",
+		},
+		{
+			ID:           rand.Intn(999_999) + 1,
+			Title:        "Item 2",
+			InitialPrice: 200,
+			Description:  "Description of item 2",
+		},
+	}
+
+	return c.JSON(http.StatusOK, &items)
 }
 
 // Create Item
@@ -53,7 +63,13 @@ func (r *Routes) createItem(c echo.Context) error {
 
 func (r *Routes) getItem(c echo.Context) error {
 	r.Log.Infof("Get item with id: %s", c.Param("id"))
-	return c.String(http.StatusOK, "Get item")
+
+	return c.JSON(http.StatusOK, &models.Item{
+		ID:           rand.Intn(999_999) + 1,
+		Title:        "Item 1",
+		InitialPrice: 100,
+		Description:  "Description of item 1",
+	})
 }
 
 func (r *Routes) updateItem(c echo.Context) error {
