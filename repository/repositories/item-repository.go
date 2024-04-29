@@ -92,3 +92,13 @@ func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item) (*models.Item,
 
 	return &updatedItem, nil
 }
+
+func (r *ItemRepository) DeleteItem(id int) error {
+	_, err := r.db.Exec("DELETE FROM items WHERE id = $1", id)
+	if err != nil {
+		r.log.Error("failed to delete item from db", err)
+		return err
+	}
+
+	return nil
+}

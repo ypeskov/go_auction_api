@@ -174,7 +174,13 @@ func (r *Routes) deleteItem(c echo.Context) error {
 		r.Log.Error("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
-	r.Log.Infof("Item with id %d deleted", id)
+
+	err = r.ItemsRepo.DeleteItem(id)
+	if err != nil {
+		r.Log.Error("failed to delete item", err)
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to delete item"))
+	}
 
 	return c.NoContent(http.StatusNoContent)
 }

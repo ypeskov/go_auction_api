@@ -5,15 +5,16 @@ meta {
 }
 
 put {
-  url: {{protocol}}://{{domain}}{{port}}/items/12112
+  url: {{protocol}}://{{domain}}{{port}}/items/9
   body: json
   auth: none
 }
 
 body:json {
   {
+    "userId": 1,
     "title": "Book",
     "initialPrice": 48,
-    "description": "Barmaley"
+    "description": "Zalupa"
   }
 }
