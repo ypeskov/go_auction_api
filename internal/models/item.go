@@ -3,7 +3,7 @@ package models
 import "github.com/go-playground/validator"
 
 type Item struct {
-	ID           int    `json:"id"`
+	Id           int    `json:"id"`
 	Title        string `json:"title" validate:"required"`
 	InitialPrice int    `json:"initialPrice" validate:"min=0"`
 	SoldPrice    int    `json:"soldPrice"`

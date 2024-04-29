@@ -32,13 +32,13 @@ func (r *Routes) getItemsList(c echo.Context) error {
 	r.Log.Info("Get items list")
 	items := []*models.Item{
 		{
-			ID:           rand.Intn(999_999) + 1,
+			Id:           rand.Intn(999_999) + 1,
 			Title:        "Item 1",
 			InitialPrice: 100,
 			Description:  "Description of item 1",
 		},
 		{
-			ID:           rand.Intn(999_999) + 1,
+			Id:           rand.Intn(999_999) + 1,
 			Title:        "Item 2",
 			InitialPrice: 200,
 			Description:  "Description of item 2",
@@ -76,7 +76,7 @@ func (r *Routes) createItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
 	}
 
-	req.ID = rand.Intn(999_999) + 1
+	req.Id = rand.Intn(999_999) + 1
 	r.Log.Infof("Item created: %+v", req)
 
 	return c.JSON(http.StatusCreated, &req)
@@ -103,7 +103,7 @@ func (r *Routes) getItem(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &models.Item{
-		ID:           id,
+		Id:           id,
 		Title:        "Item 1",
 		InitialPrice: 100,
 		Description:  "Description of item 1",
@@ -144,7 +144,7 @@ func (r *Routes) updateItem(c echo.Context) error {
 		r.Log.Error("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
-	req.ID = id
+	req.Id = id
 
 	return c.JSON(http.StatusOK, &req)
 }
