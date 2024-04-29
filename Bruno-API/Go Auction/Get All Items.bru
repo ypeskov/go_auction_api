@@ -5,11 +5,7 @@ meta {
 }
 
 get {
-  url: {{protocol}}://localhost:3000/items/
+  url: {{protocol}}://{{domain}}{{port}}/items/
   body: none
   auth: none
-}
-
-vars:pre-request {
-  test: Fuck
 }

@@ -1,13 +1,11 @@
 package routes
 
 import (
-	"math/rand"
+	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
-	"ypeskov/go_hillel_9/internal/models"
-
-	"github.com/labstack/echo/v4"
+	"ypeskov/go_hillel_9/repository/models"
 )
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
@@ -29,21 +27,13 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 // @failure 500 {object} errors.Error "Internal server error"
 // @router /items/ [get]
 func (r *Routes) getItemsList(c echo.Context) error {
-	r.Log.Infof("%+v", r.Db)
-	r.Log.Info("Get items list")
-	items := []*models.Item{
-		{
-			Id:           rand.Intn(999_999) + 1,
-			Title:        "Item 1",
-			InitialPrice: 100,
-			Description:  "Description of item 1",
-		},
-		{
-			Id:           rand.Intn(999_999) + 1,
-			Title:        "Item ++++++",
-			InitialPrice: 200,
-			Description:  "Description of item 2",
-		},
+	r.Log.Infof("Getting items list ...")
+
+	items, err := r.ItemsRepo.GetItemsList()
+	if err != nil {
+		r.Log.Error("failed to get items from db", err)
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get items from db"))
 	}
 
 	return c.JSON(http.StatusOK, &items)
@@ -68,19 +58,28 @@ func (r *Routes) createItem(c echo.Context) error {
 	err := c.Bind(req)
 	if err != nil {
 		r.Log.Error("failed to parse request body", err)
-		return c.JSON(http.StatusBadRequest, errors.NewError("INCORRECT_REQUEST_BODY", "Failed to parse request body"))
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to parse request body"))
 	}
 
 	err = req.Validate()
 	if err != nil {
 		r.Log.Error("validation failed: ", err)
-		return c.JSON(http.StatusBadRequest, errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
 	}
 
-	req.Id = rand.Intn(999_999) + 1
-	r.Log.Infof("Item created: %+v", req)
+	item, err := r.ItemsRepo.CreateItem(req)
+	if err != nil {
+		r.Log.Error("failed to create item", err)
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create item"))
 
-	return c.JSON(http.StatusCreated, &req)
+	}
+
+	r.Log.Infof("Inserted ID: %d", item.Id)
+
+	return c.JSON(http.StatusCreated, &item)
 }
 
 // getItem retrieves an item by its ID.
@@ -102,12 +101,12 @@ func (r *Routes) getItem(c echo.Context) error {
 		r.Log.Error("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
-
+	s := "SELECT * FROM items WHERE id = $1"
 	return c.JSON(http.StatusOK, &models.Item{
 		Id:           id,
 		Title:        "Item 1",
 		InitialPrice: 100,
-		Description:  "Description of item 1",
+		Description:  &s,
 	})
 }
 
