@@ -54,3 +54,41 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 
 	return &newItem, nil
 }
+
+func (r *ItemRepository) GetItemById(id int) (*models.Item, error) {
+	var item models.Item
+
+	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1", id)
+	if err != nil {
+		r.log.Error("failed to get item by id", err)
+		return nil, err
+	}
+
+	return &item, nil
+}
+
+func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item) (*models.Item, error) {
+	updateQuery :=
+		"UPDATE items SET user_id = $1, title = $2, initial_price = $3, description = $4 WHERE id = $5 RETURNING *"
+	row, err := r.db.Query(updateQuery, srcItem.UserId, srcItem.Title, srcItem.InitialPrice, srcItem.Description, id)
+	if err != nil {
+		r.log.Error("failed to update item in db", err)
+		return nil, err
+	}
+
+	var updatedItem models.Item
+	if row.Next() {
+		err = row.Scan(&updatedItem.Id, &updatedItem.UserId, &updatedItem.Title, &updatedItem.InitialPrice,
+			&updatedItem.SoldPrice, &updatedItem.Description)
+		if err != nil {
+			r.log.Errorf("Failed to scan id: %v", err)
+			return nil, err
+		}
+	}
+	if updatedItem.SoldPrice == nil {
+		var zero float64 = 0.0
+		updatedItem.SoldPrice = &zero
+	}
+
+	return &updatedItem, nil
+}

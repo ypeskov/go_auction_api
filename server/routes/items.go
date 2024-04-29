@@ -101,13 +101,14 @@ func (r *Routes) getItem(c echo.Context) error {
 		r.Log.Error("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
-	s := "SELECT * FROM items WHERE id = $1"
-	return c.JSON(http.StatusOK, &models.Item{
-		Id:           id,
-		Title:        "Item 1",
-		InitialPrice: 100,
-		Description:  &s,
-	})
+
+	item, err := r.ItemsRepo.GetItemById(id)
+	if err != nil {
+		r.Log.Error("failed to get item by id", err)
+		return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
+	}
+
+	return c.JSON(http.StatusOK, &item)
 }
 
 // updateItem updates an item by its ID based on the provided details.
@@ -144,9 +145,14 @@ func (r *Routes) updateItem(c echo.Context) error {
 		r.Log.Error("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
-	req.Id = id
 
-	return c.JSON(http.StatusOK, &req)
+	item, err := r.ItemsRepo.UpdateItem(id, req)
+	if err != nil {
+		r.Log.Error("failed to update item", err)
+		return c.JSON(http.StatusInternalServerError, errors.NewError("INTERNAL_SERVER_ERROR", "Failed to update item"))
+	}
+
+	return c.JSON(http.StatusOK, &item)
 }
 
 // deleteItem deletes an item by its ID.
