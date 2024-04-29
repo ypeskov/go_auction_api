@@ -1,0 +1,19 @@
+meta {
+  name: Delete Item
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{protocol}}://{{domain}}{{port}}/items/12112
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "title": "Book",
+    "initialPrice": 48,
+    "description": "Barmaley"
+  }
+}

@@ -29,6 +29,7 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 // @failure 500 {object} errors.Error "Internal server error"
 // @router /items/ [get]
 func (r *Routes) getItemsList(c echo.Context) error {
+	r.Log.Infof("%+v", r.Db)
 	r.Log.Info("Get items list")
 	items := []*models.Item{
 		{
@@ -39,7 +40,7 @@ func (r *Routes) getItemsList(c echo.Context) error {
 		},
 		{
 			Id:           rand.Intn(999_999) + 1,
-			Title:        "Item 2",
+			Title:        "Item ++++++",
 			InitialPrice: 200,
 			Description:  "Description of item 2",
 		},

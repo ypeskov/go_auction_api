@@ -6,6 +6,7 @@ import (
 
 	"fmt"
 	"ypeskov/go_hillel_9/internal/config"
+	"ypeskov/go_hillel_9/internal/database"
 	"ypeskov/go_hillel_9/internal/logger"
 )
 
@@ -19,7 +20,9 @@ func main() {
 	logger := logger.New(cfg)
 	logger.Info("Starting the application...")
 
-	routes := routes.New(logger)
+	db := database.GetDB(cfg, logger)
+
+	routes := routes.New(logger, db)
 
 	server := server.New(cfg, routes)
 	err = server.Start()

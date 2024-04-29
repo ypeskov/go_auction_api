@@ -1,0 +1,15 @@
+meta {
+  name: Get All Items
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{protocol}}://localhost:3000/items/
+  body: none
+  auth: none
+}
+
+vars:pre-request {
+  test: Fuck
+}

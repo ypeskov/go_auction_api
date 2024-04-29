@@ -7,8 +7,15 @@ import (
 )
 
 type Config struct {
-	Port     string `env:"PORT" envDefault:":3000"`
+	Port string `env:"PORT" envDefault:":3000"`
+
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
+
+	DB_USER string `env:"DB_USER" envDefault:"postgres"`
+	DB_PASS string `env:"DB_PASSWORD" envDefault:"postgres"`
+	DB_HOST string `env:"DB_HOST" envDefault:"localhost"`
+	DB_PORT string `env:"DB_PORT" envDefault:"5432"`
+	DB_NAME string `env:"DB_NAME" envDefault:"postgres"`
 }
 
 func NewConfig() (*Config, error) {
