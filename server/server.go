@@ -25,6 +25,9 @@ func New(cfg *config.Config, handlers *routes.Routes) *Server {
 	itemsGroup := e.Group("/items")
 	handlers.RegisterItemsRoutes(itemsGroup)
 
+	usersGroup := e.Group("/users")
+	handlers.RegisterUsersRoutes(usersGroup)
+
 	return &Server{
 		e:    e,
 		port: cfg.Port,

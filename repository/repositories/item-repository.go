@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"ypeskov/go_hillel_9/internal/database"
+	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/internal/log"
 	"ypeskov/go_hillel_9/repository/models"
 )
@@ -11,7 +12,7 @@ type ItemRepository struct {
 	db  database.Database
 }
 
-func NewItemRepository(log *log.Logger, connection database.Database) *ItemRepository {
+func GetItemRepository(log *log.Logger, connection database.Database) *ItemRepository {
 	return &ItemRepository{
 		log: log,
 		db:  connection,
@@ -46,6 +47,10 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 			r.log.Errorf("Failed to scan id: %v", err)
 			return nil, err
 		}
+	} else {
+		r.log.Error("failed to scan new item")
+		return nil, err
+
 	}
 	if newItem.SoldPrice == nil {
 		var zero float64 = 0.0
@@ -94,10 +99,23 @@ func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item) (*models.Item,
 }
 
 func (r *ItemRepository) DeleteItem(id int) error {
-	_, err := r.db.Exec("DELETE FROM items WHERE id = $1", id)
+	result, err := r.db.Exec("DELETE FROM items WHERE id = $1", id)
 	if err != nil {
 		r.log.Error("failed to delete item from db", err)
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		r.log.Error("error checking rows affected", err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		r.log.Errorln("no item was deleted")
+		return errors.NotFoundErr
+	} else {
+		r.log.Infof("Item with id %d deleted", id)
 	}
 
 	return nil

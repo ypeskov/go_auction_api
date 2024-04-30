@@ -1,6 +1,7 @@
 package routes
 
 import (
+	goerrors "errors"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -177,7 +178,11 @@ func (r *Routes) deleteItem(c echo.Context) error {
 
 	err = r.ItemsRepo.DeleteItem(id)
 	if err != nil {
-		r.Log.Error("failed to delete item", err)
+		if goerrors.Is(err, errors.NotFoundErr) {
+			r.Log.Error("item not found", err)
+			return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
+		}
+		r.Log.Errorln("failed to delete item", err)
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to delete item"))
 	}

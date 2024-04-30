@@ -8,10 +8,6 @@ import (
 	log "ypeskov/go_hillel_9/internal/log"
 )
 
-//type Database struct {
-//	Db *sqlx.DB
-//}
-
 type Database = *sqlx.DB
 
 func GetDB(cfg *config.Config, log *log.Logger) Database {

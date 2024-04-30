@@ -9,13 +9,16 @@ import (
 type Routes struct {
 	Log       *log.Logger
 	ItemsRepo *repositories.ItemRepository
+	UserRepo  *repositories.UserRepository
 }
 
 func New(log *log.Logger, db database.Database) *Routes {
-	itemsRepo := repositories.NewItemRepository(log, db)
+	itemsRepo := repositories.GetItemRepository(log, db)
+	userRepo := repositories.GetUserRepository(log, db)
 
 	return &Routes{
 		Log:       log,
 		ItemsRepo: itemsRepo,
+		UserRepo:  userRepo,
 	}
 }

@@ -32,3 +32,8 @@ var InvalidParamterErr = Error{
 	Code:    "INVALID_PARAMETER",
 	Message: "Invalid parameter",
 }
+
+var NotFoundErr = Error{
+	Code:    "NOT_FOUND",
+	Message: "Not found",
+}
