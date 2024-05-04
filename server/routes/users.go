@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
-	"ypeskov/go_hillel_9/services"
 )
 
 type Credentials struct {
@@ -35,7 +34,7 @@ func (r *Routes) RegisterUsersRoutes(g *echo.Group) {
 func (r *Routes) getUsersList(c echo.Context) error {
 	r.Log.Infof("Getting users list ...")
 
-	users, err := r.UserRepo.GetUsersList()
+	users, err := r.usersService.GetUsersList()
 	if err != nil {
 		r.Log.Error("failed to get users from db", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -100,8 +99,6 @@ func (r *Routes) createUser(c echo.Context) error {
 func (r *Routes) LoginUser(c echo.Context) error {
 	r.Log.Infof("Logging in user ...")
 
-	userService := services.GetUserService(r.UserRepo, r.Log, r.cfg)
-
 	var creds Credentials
 	err := c.Bind(&creds)
 	if err != nil {
@@ -109,7 +106,7 @@ func (r *Routes) LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.BadRequestErr)
 	}
 
-	token, err := userService.GetJWT(creds.Email, creds.Password)
+	token, err := r.usersService.GetJWT(creds.Email, creds.Password)
 	if err != nil {
 		r.Log.Errorln("failed to get JWT", err)
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)

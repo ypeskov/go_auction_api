@@ -12,7 +12,6 @@ type Routes struct {
 	Log          *log.Logger
 	cfg          *config.Config
 	ItemsRepo    repositories.ItemRepositoryInterface
-	UserRepo     repositories.UserRepositoryInterface
 	usersService services.UsersServiceInterface
 }
 
@@ -24,7 +23,6 @@ func New(log *log.Logger, db database.Database, cfg *config.Config) *Routes {
 		Log:          log,
 		cfg:          cfg,
 		ItemsRepo:    itemsRepo,
-		UserRepo:     userRepo,
 		usersService: services.GetUserService(userRepo, log, cfg),
 	}
 }

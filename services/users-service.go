@@ -25,6 +25,7 @@ type Claims struct {
 
 type UsersServiceInterface interface {
 	CreateUser(srcUser *models.User) (*models.User, error)
+	GetUsersList() ([]*models.User, error)
 	GetJWT(email string, password string) (string, error)
 }
 
@@ -47,6 +48,10 @@ func (us *UsersService) CreateUser(srcUser *models.User) (*models.User, error) {
 	srcUser.PasswordHash = hash
 
 	return us.userRepo.CreateUser(srcUser)
+}
+
+func (us *UsersService) GetUsersList() ([]*models.User, error) {
+	return us.userRepo.GetUsersList()
 }
 
 func (us *UsersService) GetJWT(username string, password string) (string, error) {
