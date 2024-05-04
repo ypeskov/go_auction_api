@@ -27,6 +27,7 @@ type UsersServiceInterface interface {
 	CreateUser(srcUser *models.User) (*models.User, error)
 	GetUsersList() ([]*models.User, error)
 	GetJWT(email string, password string) (string, error)
+	GetUserByEmail(email string) *models.User
 }
 
 func GetUserService(userRepo repositories.UserRepositoryInterface,
@@ -82,6 +83,10 @@ func (us *UsersService) GetJWT(username string, password string) (string, error)
 	}
 
 	return tokenString, nil
+}
+
+func (us *UsersService) GetUserByEmail(email string) *models.User {
+	return us.userRepo.GetUserByEmail(email)
 }
 
 func hashPassword(password string) (string, error) {

@@ -11,8 +11,8 @@ import (
 type Routes struct {
 	Log          *log.Logger
 	cfg          *config.Config
-	usersService services.UsersServiceInterface
-	itemsService services.ItemsServiceInterface
+	UsersService services.UsersServiceInterface
+	ItemsService services.ItemsServiceInterface
 }
 
 func New(log *log.Logger, db database.Database, cfg *config.Config) *Routes {
@@ -22,7 +22,7 @@ func New(log *log.Logger, db database.Database, cfg *config.Config) *Routes {
 	return &Routes{
 		Log:          log,
 		cfg:          cfg,
-		itemsService: services.GetItemService(itemsRepo, log, cfg),
-		usersService: services.GetUserService(userRepo, log, cfg),
+		ItemsService: services.GetItemService(itemsRepo, log, cfg),
+		UsersService: services.GetUserService(userRepo, log, cfg),
 	}
 }
