@@ -6,7 +6,7 @@ import (
 
 type Item struct {
 	Id           int      `json:"id"`
-	UserId       int      `json:"userId" db:"user_id"`
+	UserId       int      `db:"user_id"`
 	Title        string   `json:"title" validate:"required"`
 	InitialPrice float64  `json:"initialPrice" validate:"min=0" db:"initial_price"`
 	SoldPrice    *float64 `json:"soldPrice" db:"sold_price"`

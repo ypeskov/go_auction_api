@@ -70,6 +70,8 @@ func (r *Routes) createItem(c echo.Context) error {
 			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
 	}
 
+	user := c.Get("user").(*models.User)
+	req.UserId = user.Id
 	item, err := r.ItemsService.CreateItem(req)
 	if err != nil {
 		r.Log.Error("failed to create item", err)
