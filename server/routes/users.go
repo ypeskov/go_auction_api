@@ -88,22 +88,19 @@ func (r *Routes) createUser(c echo.Context) error {
 func (r *Routes) LoginUser(c echo.Context) error {
 	r.Log.Infof("Logging in user ...")
 
-	userService := services.GetUserService(r.UserRepo, r.Log)
+	userService := services.GetUserService(r.UserRepo, r.Log, r.cfg)
 
 	var creds Credentials
 	err := c.Bind(&creds)
-
 	if err != nil {
-		r.Log.Error("failed to parse request body", err)
-		return c.JSON(http.StatusBadRequest,
-			errors.NewError("BAD_REQUEST", "Failed to parse request body"))
+		r.Log.Errorln("failed to parse request body", err)
+		return c.JSON(http.StatusBadRequest, errors.BadRequestErr)
 	}
 
 	token, err := userService.GetJWT(creds.Email, creds.Password)
 	if err != nil {
-		r.Log.Error("failed to login user", err)
-		return c.JSON(http.StatusInternalServerError,
-			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to login user"))
+		r.Log.Errorln("failed to get JWT", err)
+		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
 	return c.JSON(http.StatusOK, token)

@@ -16,6 +16,7 @@ type UserRepository struct {
 type UserRepositoryInterface interface {
 	GetUsersList() ([]*models.User, error)
 	CreateUser(srcUser *models.User) (*models.User, error)
+	GetUserByEmail(email string) *models.User
 }
 
 func GetUserRepository(log *log.Logger, connection database.Database) *UserRepository {
@@ -62,4 +63,16 @@ func (r *UserRepository) CreateUser(srcUser *models.User) (*models.User, error) 
 	}
 
 	return &newUser, nil
+}
+
+func (r *UserRepository) GetUserByEmail(email string) *models.User {
+	var user models.User
+
+	err := r.db.Get(&user, "SELECT * FROM users WHERE email = $1", email)
+	if err != nil {
+		r.log.Error("failed to get user from db", err)
+		return nil
+	}
+
+	return &user
 }

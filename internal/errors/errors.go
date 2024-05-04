@@ -37,3 +37,18 @@ var NotFoundErr = Error{
 	Code:    "NOT_FOUND",
 	Message: "Not found",
 }
+
+var UnauthorizedErr = Error{
+	Code:    "UNAUTHORIZED",
+	Message: "Unauthorized",
+}
+
+var InternalServerErr = Error{
+	Code:    "INTERNAL_SERVER_ERROR",
+	Message: "Internal server error",
+}
+
+var BadRequestErr = Error{
+	Code:    "BAD_REQUEST",
+	Message: "Bad request",
+}
