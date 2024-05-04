@@ -52,3 +52,8 @@ var BadRequestErr = Error{
 	Code:    "BAD_REQUEST",
 	Message: "Bad request",
 }
+
+var TokenExpiredErr = Error{
+	Code:    "TOKEN_EXPIRED",
+	Message: "Token expired",
+}

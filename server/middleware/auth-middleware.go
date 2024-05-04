@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	goerrors "errors"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -25,8 +26,12 @@ func AuthMiddleware(logger *log.Logger, cfg *config.Config, userService services
 				return []byte(cfg.SECRET_KEY), nil
 			})
 			if err != nil {
-				logger.Errorln("failed to parse token:", err)
-				return c.JSON(http.StatusInternalServerError, errors.InternalServerErr)
+				if goerrors.Is(err, jwt.ErrTokenExpired) {
+					logger.Errorln("token expired")
+					return c.JSON(http.StatusUnauthorized, errors.TokenExpiredErr)
+				}
+				logger.Errorln("failed to parse token", err)
+				return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 			}
 
 			user := userService.GetUserByEmail(claims.Email)
