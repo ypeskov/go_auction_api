@@ -17,8 +17,8 @@ type ItemsServiceInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item) (*models.Item, error)
 	GetItemById(id int, userId int) (*models.Item, error)
-	UpdateItem(id int, srcItem *models.Item) (*models.Item, error)
-	DeleteItem(id int) error
+	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
+	DeleteItem(id int, userid int) error
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -43,10 +43,10 @@ func (is *ItemService) GetItemById(id int, userId int) (*models.Item, error) {
 	return is.itemRepo.GetItemById(id, userId)
 }
 
-func (is *ItemService) UpdateItem(id int, srcItem *models.Item) (*models.Item, error) {
-	return is.itemRepo.UpdateItem(id, srcItem)
+func (is *ItemService) UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error) {
+	return is.itemRepo.UpdateItem(id, srcItem, userId)
 }
 
-func (is *ItemService) DeleteItem(id int) error {
-	return is.itemRepo.DeleteItem(id)
+func (is *ItemService) DeleteItem(id int, userId int) error {
+	return is.itemRepo.DeleteItem(id, userId)
 }
