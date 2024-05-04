@@ -19,7 +19,7 @@ type UserRepositoryInterface interface {
 	GetUserByEmail(email string) *models.User
 }
 
-func GetUserRepository(log *log.Logger, connection database.Database) *UserRepository {
+func GetUserRepository(log *log.Logger, connection database.Database) UserRepositoryInterface {
 	return &UserRepository{
 		log: log,
 		db:  connection,

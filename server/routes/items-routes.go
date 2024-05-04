@@ -30,7 +30,7 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 func (r *Routes) getItemsList(c echo.Context) error {
 	r.Log.Infof("Getting items list ...")
 
-	items, err := r.ItemsRepo.GetItemsList()
+	items, err := r.itemsService.GetItemsList()
 	if err != nil {
 		r.Log.Error("failed to get items from db", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -70,7 +70,7 @@ func (r *Routes) createItem(c echo.Context) error {
 			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
 	}
 
-	item, err := r.ItemsRepo.CreateItem(req)
+	item, err := r.itemsService.CreateItem(req)
 	if err != nil {
 		r.Log.Error("failed to create item", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -103,7 +103,7 @@ func (r *Routes) getItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	item, err := r.ItemsRepo.GetItemById(id)
+	item, err := r.itemsService.GetItemById(id)
 	if err != nil {
 		r.Log.Error("failed to get item by id", err)
 		return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
@@ -147,7 +147,7 @@ func (r *Routes) updateItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	item, err := r.ItemsRepo.UpdateItem(id, req)
+	item, err := r.itemsService.UpdateItem(id, req)
 	if err != nil {
 		r.Log.Error("failed to update item", err)
 		return c.JSON(http.StatusInternalServerError, errors.NewError("INTERNAL_SERVER_ERROR", "Failed to update item"))
@@ -176,7 +176,7 @@ func (r *Routes) deleteItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	err = r.ItemsRepo.DeleteItem(id)
+	err = r.itemsService.DeleteItem(id)
 	if err != nil {
 		if goerrors.Is(err, errors.NotFoundErr) {
 			r.Log.Error("item not found", err)
