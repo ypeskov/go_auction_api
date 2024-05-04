@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"time"
 	"ypeskov/go_hillel_9/internal/database"
 	"ypeskov/go_hillel_9/internal/log"
@@ -10,6 +11,11 @@ import (
 type UserRepository struct {
 	log *log.Logger
 	db  database.Database
+}
+
+type UserRepositoryInterface interface {
+	GetUsersList() ([]*models.User, error)
+	CreateUser(srcUser *models.User) (*models.User, error)
 }
 
 func GetUserRepository(log *log.Logger, connection database.Database) *UserRepository {
@@ -33,24 +39,26 @@ func (r *UserRepository) GetUsersList() ([]*models.User, error) {
 
 func (r *UserRepository) CreateUser(srcUser *models.User) (*models.User, error) {
 	now := time.Now().UTC()
+	srcUser.LastLoginUtc = now
 
-	insertQuery := "INSERT INTO users (first_name, last_name, email, last_login_utc) VALUES ($1, $2, $3, $4) RETURNING *"
-	row, err := r.db.Query(insertQuery, srcUser.FirsName, srcUser.LastName, srcUser.Email, now)
+	insertQuery := `INSERT INTO users (first_name, last_name, email, password_hash, last_login_utc) 
+                    VALUES (:first_name, :last_name, :email, :password_hash, :last_login_utc) RETURNING *`
+
+	rows, err := r.db.NamedQuery(insertQuery, srcUser)
 	if err != nil {
 		r.log.Error("failed to insert srcUser into db", err)
 		return nil, err
 	}
 
 	var newUser models.User
-	if row.Next() {
-		err = row.Scan(&newUser.Id, &newUser.FirsName, &newUser.LastName, &newUser.Email, &newUser.LastLoginUtc)
+	if rows.Next() {
+		err := rows.StructScan(&newUser)
 		if err != nil {
-			r.log.Errorf("Failed to scan id: %v", err)
+			r.log.Errorf("Failed to scan user: %v", err)
 			return nil, err
 		}
 	} else {
-		r.log.Error("no rows returned")
-		return nil, err
+		return nil, fmt.Errorf("failed to scan new user")
 	}
 
 	return &newUser, nil

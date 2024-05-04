@@ -7,9 +7,10 @@ import (
 
 type User struct {
 	Id           int       `json:"id"`
-	FirsName     string    `json:"firstName" validate:"required,min=1" db:"first_name"`
+	FirstName    string    `json:"firstName" validate:"required,min=1" db:"first_name"`
 	LastName     string    `json:"lastName" validate:"required,min=1" db:"last_name"`
 	Email        string    `json:"email" validate:"required,email,min=1"`
+	PasswordHash string    `json:"password" db:"password_hash"`
 	LastLoginUtc time.Time `db:"last_login_utc"`
 }
 

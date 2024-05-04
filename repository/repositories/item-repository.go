@@ -12,6 +12,14 @@ type ItemRepository struct {
 	db  database.Database
 }
 
+type ItemRepositoryInterface interface {
+	GetItemsList() ([]*models.Item, error)
+	CreateItem(srcItem *models.Item) (*models.Item, error)
+	GetItemById(id int) (*models.Item, error)
+	UpdateItem(id int, srcItem *models.Item) (*models.Item, error)
+	DeleteItem(id int) error
+}
+
 func GetItemRepository(log *log.Logger, connection database.Database) *ItemRepository {
 	return &ItemRepository{
 		log: log,

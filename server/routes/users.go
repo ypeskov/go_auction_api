@@ -5,11 +5,18 @@ import (
 	"net/http"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
+	"ypeskov/go_hillel_9/services"
 )
+
+type Credentials struct {
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
 
 func (r *Routes) RegisterUsersRoutes(g *echo.Group) {
 	g.GET("/", r.getUsersList)
 	g.POST("/", r.createUser)
+	g.POST("/login/", r.LoginUser)
 	//g.GET("/:id", r.getItem)
 	//g.PUT("/:id", r.updateItem)
 	//g.DELETE("/:id", r.deleteItem)
@@ -68,7 +75,7 @@ func (r *Routes) createUser(c echo.Context) error {
 			errors.NewError("VALIDATION_FAILED", err.Error()))
 	}
 
-	newUser, err := r.UserRepo.CreateUser(req)
+	newUser, err := r.usersService.CreateUser(req)
 	if err != nil {
 		r.Log.Error("failed to create user", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -76,4 +83,28 @@ func (r *Routes) createUser(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, newUser)
+}
+
+func (r *Routes) LoginUser(c echo.Context) error {
+	r.Log.Infof("Logging in user ...")
+
+	userService := services.GetUserService(r.UserRepo, r.Log)
+
+	var creds Credentials
+	err := c.Bind(&creds)
+
+	if err != nil {
+		r.Log.Error("failed to parse request body", err)
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("BAD_REQUEST", "Failed to parse request body"))
+	}
+
+	token, err := userService.GetJWT(creds.Email, creds.Password)
+	if err != nil {
+		r.Log.Error("failed to login user", err)
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to login user"))
+	}
+
+	return c.JSON(http.StatusOK, token)
 }
