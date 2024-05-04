@@ -15,12 +15,12 @@ type ItemRepository struct {
 type ItemRepositoryInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item) (*models.Item, error)
-	GetItemById(id int) (*models.Item, error)
+	GetItemById(id int, userId int) (*models.Item, error)
 	UpdateItem(id int, srcItem *models.Item) (*models.Item, error)
 	DeleteItem(id int) error
 }
 
-func GetItemRepository(log *log.Logger, connection database.Database) *ItemRepository {
+func GetItemRepository(log *log.Logger, connection database.Database) ItemRepositoryInterface {
 	return &ItemRepository{
 		log: log,
 		db:  connection,
@@ -68,10 +68,10 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 	return &newItem, nil
 }
 
-func (r *ItemRepository) GetItemById(id int) (*models.Item, error) {
+func (r *ItemRepository) GetItemById(id int, userId int) (*models.Item, error) {
 	var item models.Item
 
-	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1", id)
+	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
 		r.log.Error("failed to get item by id", err)
 		return nil, err

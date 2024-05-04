@@ -110,7 +110,14 @@ func (r *Routes) getItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	item, err := r.ItemsService.GetItemById(id)
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get user from context"))
+	}
+
+	item, err := r.ItemsService.GetItemById(id, user.Id)
 	if err != nil {
 		r.Log.Error("failed to get item by id", err)
 		return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
