@@ -29,8 +29,13 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 // @router /items/ [get]
 func (r *Routes) getItemsList(c echo.Context) error {
 	r.Log.Infof("Getting items list ...")
-
-	items, err := r.ItemsService.GetItemsList()
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get user from context"))
+	}
+	items, err := r.ItemsService.GetItemsList(user.Id)
 	if err != nil {
 		r.Log.Error("failed to get items from db", err)
 		return c.JSON(http.StatusInternalServerError,

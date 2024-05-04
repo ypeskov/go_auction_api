@@ -14,7 +14,7 @@ type ItemService struct {
 }
 
 type ItemsServiceInterface interface {
-	GetItemsList() ([]*models.Item, error)
+	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item) (*models.Item, error)
 	GetItemById(id int) (*models.Item, error)
 	UpdateItem(id int, srcItem *models.Item) (*models.Item, error)
@@ -31,8 +31,8 @@ func GetItemService(itemRepo repositories.ItemRepositoryInterface,
 	}
 }
 
-func (is *ItemService) GetItemsList() ([]*models.Item, error) {
-	return is.itemRepo.GetItemsList()
+func (is *ItemService) GetItemsList(userId int) ([]*models.Item, error) {
+	return is.itemRepo.GetItemsList(userId)
 }
 
 func (is *ItemService) CreateItem(srcItem *models.Item) (*models.Item, error) {

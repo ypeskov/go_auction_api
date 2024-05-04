@@ -84,6 +84,7 @@ func (r *Routes) createUser(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create user"))
 	}
+	newUser.PasswordHash = ""
 
 	return c.JSON(http.StatusCreated, newUser)
 }
