@@ -14,13 +14,44 @@ definitions:
         type: integer
       initialPrice:
         minimum: 0
-        type: integer
+        type: number
       soldPrice:
-        type: integer
+        type: number
       title:
         type: string
+      userId:
+        type: integer
     required:
     - title
+    type: object
+  models.User:
+    properties:
+      email:
+        minLength: 1
+        type: string
+      firstName:
+        minLength: 1
+        type: string
+      id:
+        type: integer
+      lastLoginUtc:
+        type: string
+      lastName:
+        minLength: 1
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - firstName
+    - lastName
+    type: object
+  routes.Credentials:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
     type: object
 info:
   contact: {}
@@ -149,4 +180,80 @@ paths:
       summary: Update Item
       tags:
       - Items
+  /users/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all available users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Get Users List
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user based on the provided request body.
+      parameters:
+      - description: User details
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created successfully
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: 'Bad Request: Failed to parse request body or validation failed'
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Create User
+      tags:
+      - Users
+  /users/login/:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user based on the provided credentials.
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/routes.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.Error'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.Error'
+      summary: Login User
+      tags:
+      - Users
 swagger: "2.0"

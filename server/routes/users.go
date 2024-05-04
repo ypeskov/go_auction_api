@@ -85,6 +85,18 @@ func (r *Routes) createUser(c echo.Context) error {
 	return c.JSON(http.StatusCreated, newUser)
 }
 
+// LoginUser logs in a user based on the provided credentials.
+// It returns a JWT token if the login is successful or an error if it fails.
+// @summary Login User
+// @tags Users
+// @description Logs in a user based on the provided credentials.
+// @accept json
+// @produce json
+// @param user body Credentials true "User credentials"
+// @success 200 {object} string "JWT"
+// @failure 400 {object} errors.Error "Bad Request"
+// @failure 401 {object} errors.Error "Unauthorized"
+// @router /users/login/ [post]
 func (r *Routes) LoginUser(c echo.Context) error {
 	r.Log.Infof("Logging in user ...")
 
