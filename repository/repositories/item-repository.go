@@ -12,17 +12,25 @@ type ItemRepository struct {
 	db  database.Database
 }
 
-func GetItemRepository(log *log.Logger, connection database.Database) *ItemRepository {
+type ItemRepositoryInterface interface {
+	GetItemsList(userId int) ([]*models.Item, error)
+	CreateItem(srcItem *models.Item) (*models.Item, error)
+	GetItemById(id int, userId int) (*models.Item, error)
+	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
+	DeleteItem(id int, userId int) error
+}
+
+func GetItemRepository(log *log.Logger, connection database.Database) ItemRepositoryInterface {
 	return &ItemRepository{
 		log: log,
 		db:  connection,
 	}
 }
 
-func (r *ItemRepository) GetItemsList() ([]*models.Item, error) {
+func (r *ItemRepository) GetItemsList(userId int) ([]*models.Item, error) {
 	var items []*models.Item
 
-	err := r.db.Select(&items, "SELECT * FROM items")
+	err := r.db.Select(&items, "SELECT * FROM items WHERE user_id = $1", userId)
 	if err != nil {
 		r.log.Error("failed to get items from db", err)
 		return nil, err
@@ -60,10 +68,10 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 	return &newItem, nil
 }
 
-func (r *ItemRepository) GetItemById(id int) (*models.Item, error) {
+func (r *ItemRepository) GetItemById(id int, userId int) (*models.Item, error) {
 	var item models.Item
 
-	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1", id)
+	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
 		r.log.Error("failed to get item by id", err)
 		return nil, err
@@ -72,10 +80,12 @@ func (r *ItemRepository) GetItemById(id int) (*models.Item, error) {
 	return &item, nil
 }
 
-func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item) (*models.Item, error) {
+func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error) {
 	updateQuery :=
-		"UPDATE items SET user_id = $1, title = $2, initial_price = $3, description = $4 WHERE id = $5 RETURNING *"
-	row, err := r.db.Query(updateQuery, srcItem.UserId, srcItem.Title, srcItem.InitialPrice, srcItem.Description, id)
+		"UPDATE items SET user_id = $1, title = $2, initial_price = $3, description = $4 " +
+			"WHERE id = $5 AND user_id = $6 RETURNING *"
+	row, err := r.db.Query(updateQuery, userId, srcItem.Title, srcItem.InitialPrice,
+		srcItem.Description, id, userId)
 	if err != nil {
 		r.log.Error("failed to update item in db", err)
 		return nil, err
@@ -98,8 +108,8 @@ func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item) (*models.Item,
 	return &updatedItem, nil
 }
 
-func (r *ItemRepository) DeleteItem(id int) error {
-	result, err := r.db.Exec("DELETE FROM items WHERE id = $1", id)
+func (r *ItemRepository) DeleteItem(id int, userId int) error {
+	result, err := r.db.Exec("DELETE FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
 		r.log.Error("failed to delete item from db", err)
 		return err

@@ -6,6 +6,7 @@ import (
 	_ "ypeskov/go_hillel_9/docs"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/log"
+	"ypeskov/go_hillel_9/server/middleware"
 	"ypeskov/go_hillel_9/server/routes"
 )
 
@@ -23,6 +24,7 @@ func New(cfg *config.Config, handlers *routes.Routes) *Server {
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	itemsGroup := e.Group("/items")
+	itemsGroup.Use(middleware.AuthMiddleware(handlers.Log, cfg, handlers.UsersService))
 	handlers.RegisterItemsRoutes(itemsGroup)
 
 	usersGroup := e.Group("/users")

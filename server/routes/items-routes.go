@@ -29,8 +29,13 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 // @router /items/ [get]
 func (r *Routes) getItemsList(c echo.Context) error {
 	r.Log.Infof("Getting items list ...")
-
-	items, err := r.ItemsRepo.GetItemsList()
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get user from context"))
+	}
+	items, err := r.ItemsService.GetItemsList(user.Id)
 	if err != nil {
 		r.Log.Error("failed to get items from db", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -70,7 +75,9 @@ func (r *Routes) createItem(c echo.Context) error {
 			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
 	}
 
-	item, err := r.ItemsRepo.CreateItem(req)
+	user := c.Get("user").(*models.User)
+	req.UserId = user.Id
+	item, err := r.ItemsService.CreateItem(req)
 	if err != nil {
 		r.Log.Error("failed to create item", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -103,7 +110,14 @@ func (r *Routes) getItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	item, err := r.ItemsRepo.GetItemById(id)
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get user from context"))
+	}
+
+	item, err := r.ItemsService.GetItemById(id, user.Id)
 	if err != nil {
 		r.Log.Error("failed to get item by id", err)
 		return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
@@ -147,7 +161,14 @@ func (r *Routes) updateItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	item, err := r.ItemsRepo.UpdateItem(id, req)
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError, errors.NewError("INTERNAL_SERVER_ERROR",
+			"Failed to get user from context"))
+	}
+
+	item, err := r.ItemsService.UpdateItem(id, req, user.Id)
 	if err != nil {
 		r.Log.Error("failed to update item", err)
 		return c.JSON(http.StatusInternalServerError, errors.NewError("INTERNAL_SERVER_ERROR", "Failed to update item"))
@@ -176,7 +197,13 @@ func (r *Routes) deleteItem(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
-	err = r.ItemsRepo.DeleteItem(id)
+	user := c.Get("user").(*models.User)
+	if user == nil {
+		r.Log.Error("failed to get user from context")
+		return c.JSON(http.StatusInternalServerError, errors.NewError("INTERNAL_SERVER_ERROR",
+			"Failed to get user from context"))
+	}
+	err = r.ItemsService.DeleteItem(id, user.Id)
 	if err != nil {
 		if goerrors.Is(err, errors.NotFoundErr) {
 			r.Log.Error("item not found", err)

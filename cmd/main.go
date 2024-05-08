@@ -21,7 +21,7 @@ func main() {
 
 	db := database.GetDB(cfg, logger)
 
-	routes := routes.New(logger, db)
+	routes := routes.New(logger, db, cfg)
 
 	server := server.New(cfg, routes)
 	err = server.Start()

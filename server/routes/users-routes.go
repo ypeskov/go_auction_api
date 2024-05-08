@@ -7,9 +7,19 @@ import (
 	"ypeskov/go_hillel_9/repository/models"
 )
 
+type Credentials struct {
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+type TokenResponse struct {
+	AccessToken string `json:"accessToken"`
+}
+
 func (r *Routes) RegisterUsersRoutes(g *echo.Group) {
 	g.GET("/", r.getUsersList)
 	g.POST("/", r.createUser)
+	g.POST("/login/", r.LoginUser)
 	//g.GET("/:id", r.getItem)
 	//g.PUT("/:id", r.updateItem)
 	//g.DELETE("/:id", r.deleteItem)
@@ -28,7 +38,7 @@ func (r *Routes) RegisterUsersRoutes(g *echo.Group) {
 func (r *Routes) getUsersList(c echo.Context) error {
 	r.Log.Infof("Getting users list ...")
 
-	users, err := r.UserRepo.GetUsersList()
+	users, err := r.UsersService.GetUsersList()
 	if err != nil {
 		r.Log.Error("failed to get users from db", err)
 		return c.JSON(http.StatusInternalServerError,
@@ -68,12 +78,44 @@ func (r *Routes) createUser(c echo.Context) error {
 			errors.NewError("VALIDATION_FAILED", err.Error()))
 	}
 
-	newUser, err := r.UserRepo.CreateUser(req)
+	newUser, err := r.UsersService.CreateUser(req)
 	if err != nil {
 		r.Log.Error("failed to create user", err)
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create user"))
 	}
+	newUser.PasswordHash = ""
 
 	return c.JSON(http.StatusCreated, newUser)
+}
+
+// LoginUser logs in a user based on the provided credentials.
+// It returns a JWT token if the login is successful or an error if it fails.
+// @summary Login User
+// @tags Users
+// @description Logs in a user based on the provided credentials.
+// @accept json
+// @produce json
+// @param user body Credentials true "User credentials"
+// @success 200 {object} string "JWT"
+// @failure 400 {object} errors.Error "Bad Request"
+// @failure 401 {object} errors.Error "Unauthorized"
+// @router /users/login/ [post]
+func (r *Routes) LoginUser(c echo.Context) error {
+	r.Log.Infof("Logging in user ...")
+
+	var creds Credentials
+	err := c.Bind(&creds)
+	if err != nil {
+		r.Log.Errorln("failed to parse request body", err)
+		return c.JSON(http.StatusBadRequest, errors.BadRequestErr)
+	}
+
+	token, err := r.UsersService.GetJWT(creds.Email, creds.Password)
+	if err != nil {
+		r.Log.Errorln("failed to get JWT", err)
+		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
+	}
+
+	return c.JSON(http.StatusOK, &TokenResponse{AccessToken: token})
 }

@@ -16,6 +16,8 @@ type Config struct {
 	DB_HOST string `env:"DB_HOST" envDefault:"localhost"`
 	DB_PORT string `env:"DB_PORT" envDefault:"5432"`
 	DB_NAME string `env:"DB_NAME" envDefault:"postgres"`
+
+	SECRET_KEY string `env:"SECRET_KEY" envDefault:"secret"`
 }
 
 func NewConfig() (*Config, error) {
