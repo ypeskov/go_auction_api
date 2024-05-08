@@ -1,12 +1,12 @@
 package main
 
 import (
-	"ypeskov/go_hillel_9/server"
-	"ypeskov/go_hillel_9/server/routes"
-
 	"fmt"
 	"ypeskov/go_hillel_9/internal/config"
-	"ypeskov/go_hillel_9/internal/logger"
+	"ypeskov/go_hillel_9/internal/database"
+	log "ypeskov/go_hillel_9/internal/log"
+	"ypeskov/go_hillel_9/server"
+	"ypeskov/go_hillel_9/server/routes"
 )
 
 func main() {
@@ -16,10 +16,12 @@ func main() {
 		return
 	}
 
-	logger := logger.New(cfg)
+	logger := log.New(cfg)
 	logger.Info("Starting the application...")
 
-	routes := routes.New(logger)
+	db := database.GetDB(cfg, logger)
+
+	routes := routes.New(logger, db, cfg)
 
 	server := server.New(cfg, routes)
 	err = server.Start()
