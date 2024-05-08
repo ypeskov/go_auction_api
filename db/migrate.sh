@@ -34,7 +34,6 @@ if [ -z "$db_name" ]; then
   exit 1
 fi
 
-# Проверка аргумента
 action=$1
 
 if [ -z "$action" ]; then
