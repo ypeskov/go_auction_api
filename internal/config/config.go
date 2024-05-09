@@ -11,13 +11,16 @@ type Config struct {
 
 	LogLevel string `env:"LOG_LEVEL" envDefault:"INFO"`
 
-	DB_USER string `env:"DB_USER" envDefault:"postgres"`
-	DB_PASS string `env:"DB_PASSWORD" envDefault:"postgres"`
-	DB_HOST string `env:"DB_HOST" envDefault:"localhost"`
-	DB_PORT string `env:"DB_PORT" envDefault:"5432"`
-	DB_NAME string `env:"DB_NAME" envDefault:"postgres"`
+	DbUser string `env:"DB_USER" envDefault:"postgres"`
+	DbPass string `env:"DB_PASSWORD" envDefault:"postgres"`
+	DbHost string `env:"Db_HOST" envDefault:"localhost"`
+	DbPort string `env:"DB_PORT" envDefault:"5432"`
+	DbName string `env:"DB_NAME" envDefault:"postgres"`
 
-	SECRET_KEY string `env:"SECRET_KEY" envDefault:"secret"`
+	SecretKey string `env:"SECRET_KEY" envDefault:"secret"`
+
+	AccessTokenLifetimeMinutes  int `env:"ACCESS_TOKEN_LIFETIME_MINUTES" envDefault:"5"`
+	RefreshTokenLifetimeMinutes int `env:"REFRESH_TOKEN_LIFETIME_MINUTES" envDefault:"1440"`
 }
 
 func NewConfig() (*Config, error) {
