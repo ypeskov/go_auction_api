@@ -13,7 +13,7 @@ type Config struct {
 
 	DbUser string `env:"DB_USER" envDefault:"postgres"`
 	DbPass string `env:"DB_PASSWORD" envDefault:"postgres"`
-	DbHost string `env:"Db_HOST" envDefault:"localhost"`
+	DbHost string `env:"DB_HOST" envDefault:"localhost"`
 	DbPort string `env:"DB_PORT" envDefault:"5432"`
 	DbName string `env:"DB_NAME" envDefault:"postgres"`
 
