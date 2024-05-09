@@ -1,11 +1,14 @@
 package routes
 
 import (
+	goerrors "errors"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"time"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
+	"ypeskov/go_hillel_9/services"
 )
 
 type Credentials struct {
@@ -134,9 +137,30 @@ func (r *Routes) getNewAccessToken(c echo.Context) error {
 	r.Log.Infof("Refreshing access token ...")
 	refreshToken := c.Request().Header.Get("Refresh-Token")
 
+	// Check if the refresh token is not expired
+	claims := &services.Claims{}
+	_, err := jwt.ParseWithClaims(refreshToken, claims, func(token *jwt.Token) (any, error) {
+		return []byte(r.cfg.SecretKey), nil
+	})
+	if err != nil {
+		if goerrors.Is(err, jwt.ErrTokenExpired) {
+			r.Log.Errorln("token expired")
+			return c.JSON(http.StatusUnauthorized, errors.TokenExpiredErr)
+		}
+		r.Log.Errorln("failed to parse token", err)
+		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
+	}
+
+	// then check if refresh token is valid and not used
 	user, err := r.UsersService.GetUserByRefreshToken(refreshToken)
 	if err != nil {
 		r.Log.Errorln("failed to get user by refresh accessToken", err)
+		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
+	}
+
+	//check if user in DB is the same as in token
+	if user.Email != claims.Email && user.Id != claims.Id {
+		r.Log.Errorln("user in token is not the same as in DB")
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
