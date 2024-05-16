@@ -26,8 +26,10 @@ type Claims struct {
 type UsersServiceInterface interface {
 	CreateUser(srcUser *models.User) (*models.User, error)
 	GetUsersList() ([]*models.User, error)
-	GetJWT(email string, password string) (string, error)
+	GetJWT(email string, password string, minutes time.Duration, refreshToken bool) (string, error)
+	GetRefreshToken(email string, password string, update bool) (string, error)
 	GetUserByEmail(email string) *models.User
+	GetUserByRefreshToken(token string) (*models.User, error)
 }
 
 func GetUserService(userRepo repositories.UserRepositoryInterface,
@@ -55,17 +57,20 @@ func (us *UsersService) GetUsersList() ([]*models.User, error) {
 	return us.userRepo.GetUsersList()
 }
 
-func (us *UsersService) GetJWT(username string, password string) (string, error) {
-	user := us.userRepo.GetUserByEmail(username)
+func (us *UsersService) GetJWT(email string, password string, minutes time.Duration, refreshToken bool) (string, error) {
+	user := us.userRepo.GetUserByEmail(email)
 	if user == nil {
 		return "", errors.NotFoundErr
 	}
 
-	if !checkPasswordHash(password, user.PasswordHash) {
-		return "", errors.UnauthorizedErr
+	// If we are not refreshing the token, we need to check the password
+	if refreshToken == false {
+		if !checkPasswordHash(password, user.PasswordHash) {
+			return "", errors.UnauthorizedErr
+		}
 	}
 
-	expirationTime := time.Now().Add(5 * time.Minute)
+	expirationTime := time.Now().Add(minutes * time.Minute)
 
 	claims := &Claims{
 		Id:    user.Id,
@@ -76,13 +81,35 @@ func (us *UsersService) GetJWT(username string, password string) (string, error)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(us.cfg.SECRET_KEY))
+	tokenString, err := token.SignedString([]byte(us.cfg.SecretKey))
 	if err != nil {
 		us.log.Errorln("failed to sign token: ", err)
 		return "", errors.InternalServerErr
 	}
 
 	return tokenString, nil
+}
+
+func (us *UsersService) GetRefreshToken(email string, password string, update bool) (string, error) {
+	user := us.userRepo.GetUserByEmail(email)
+	if user == nil {
+		return "", errors.NotFoundErr
+	}
+
+	minutes := time.Duration(us.cfg.RefreshTokenLifetimeMinutes)
+	token, err := us.GetJWT(email, password, minutes, update)
+	if err != nil {
+		us.log.Errorln("failed to get JWT", err)
+		return "", err
+	}
+
+	err = us.userRepo.AddOrUpdateRefreshToken(user.Id, token)
+	if err != nil {
+		us.log.Errorln("failed to add refresh token", err)
+		return "", errors.InternalServerErr
+	}
+
+	return token, nil
 }
 
 func (us *UsersService) GetUserByEmail(email string) *models.User {
@@ -100,4 +127,14 @@ func hashPassword(password string) (string, error) {
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
+}
+
+func (us *UsersService) GetUserByRefreshToken(token string) (*models.User, error) {
+	user := us.userRepo.GetUserByRefreshToken(token)
+	if user == nil {
+		us.log.Errorln("failed to get user by refresh token")
+		return nil, errors.UnauthorizedErr
+	}
+
+	return user, nil
 }

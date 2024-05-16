@@ -12,7 +12,7 @@ type Database = *sqlx.DB
 
 func GetDB(cfg *config.Config, log *log.Logger) Database {
 	dbConnStr := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=disable",
-		cfg.DB_USER, cfg.DB_PASS, cfg.DB_HOST, cfg.DB_PORT, cfg.DB_NAME)
+		cfg.DbUser, cfg.DbPass, cfg.DbHost, cfg.DbPort, cfg.DbName)
 
 	db, err := sqlx.Connect("postgres", dbConnStr)
 	if err != nil {
