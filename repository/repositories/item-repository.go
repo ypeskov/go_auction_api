@@ -33,6 +33,7 @@ func (r *ItemRepository) GetItemsList(userId int) ([]*models.Item, error) {
 	err := r.db.Select(&items, "SELECT * FROM items WHERE user_id = $1", userId)
 	if err != nil {
 		r.log.Error("failed to get items from db", err)
+
 		return nil, err
 	}
 
@@ -44,6 +45,7 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 	row, err := r.db.Query(insertQuery, srcItem.UserId, srcItem.Title, srcItem.InitialPrice, srcItem.Description)
 	if err != nil {
 		r.log.Error("failed to insert srcItem into db", err)
+
 		return nil, err
 	}
 
@@ -53,10 +55,12 @@ func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) 
 			&newItem.SoldPrice, &newItem.Description)
 		if err != nil {
 			r.log.Errorf("Failed to scan id: %v", err)
+
 			return nil, err
 		}
 	} else {
 		r.log.Error("failed to scan new item")
+
 		return nil, err
 
 	}
@@ -74,6 +78,7 @@ func (r *ItemRepository) GetItemById(id int, userId int) (*models.Item, error) {
 	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
 		r.log.Errorln("failed to get item by id", err)
+
 		return nil, err
 	}
 
@@ -88,6 +93,7 @@ func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item, userId int) (*
 		srcItem.Description, id, userId)
 	if err != nil {
 		r.log.Error("failed to update item in db", err)
+
 		return nil, err
 	}
 
@@ -97,6 +103,7 @@ func (r *ItemRepository) UpdateItem(id int, srcItem *models.Item, userId int) (*
 			&updatedItem.SoldPrice, &updatedItem.Description)
 		if err != nil {
 			r.log.Errorf("Failed to scan id: %v", err)
+
 			return nil, err
 		}
 	}
@@ -112,17 +119,20 @@ func (r *ItemRepository) DeleteItem(id int, userId int) error {
 	result, err := r.db.Exec("DELETE FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
 		r.log.Error("failed to delete item from db", err)
+
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		r.log.Error("error checking rows affected", err)
+
 		return err
 	}
 
 	if rowsAffected == 0 {
 		r.log.Errorln("no item was deleted")
+
 		return errors.NotFoundErr
 	} else {
 		r.log.Infof("Item with id %d deleted", id)

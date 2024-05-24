@@ -29,6 +29,7 @@ func NewConfig() (*Config, error) {
 	cfg := &Config{}
 	if err := env.Parse(cfg); err != nil {
 		log.Errorf("Error parsing env vars: %v", err)
+
 		return nil, err
 	}
 

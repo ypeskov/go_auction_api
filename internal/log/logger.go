@@ -24,6 +24,7 @@ func (hook ContextHook) Fire(entry *log.Entry) error {
 		entry.Data["func"] = path.Base(funcName)
 		entry.Data["line"] = line
 	}
+
 	return nil
 }
 

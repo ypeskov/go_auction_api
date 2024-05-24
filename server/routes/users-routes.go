@@ -44,6 +44,7 @@ func (r *Routes) getUsersList(c echo.Context) error {
 	users, err := r.UsersService.GetUsersList()
 	if err != nil {
 		r.Log.Error("failed to get users from db", err)
+
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get users from db"))
 	}
@@ -70,6 +71,7 @@ func (r *Routes) createUser(c echo.Context) error {
 	err := c.Bind(req)
 	if err != nil {
 		r.Log.Error("failed to parse request body", err)
+
 		return c.JSON(http.StatusBadRequest,
 			errors.NewError("BAD_REQUEST", "Failed to parse request body"))
 	}
@@ -77,6 +79,7 @@ func (r *Routes) createUser(c echo.Context) error {
 	err = req.Validate()
 	if err != nil {
 		r.Log.Errorln("failed to validate request body", err)
+
 		return c.JSON(http.StatusBadRequest,
 			errors.NewError("VALIDATION_FAILED", err.Error()))
 	}
@@ -84,6 +87,7 @@ func (r *Routes) createUser(c echo.Context) error {
 	newUser, err := r.UsersService.CreateUser(req)
 	if err != nil {
 		r.Log.Error("failed to create user", err)
+
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create user"))
 	}
@@ -111,6 +115,7 @@ func (r *Routes) LoginUser(c echo.Context) error {
 	err := c.Bind(&creds)
 	if err != nil {
 		r.Log.Errorln("failed to parse request body", err)
+
 		return c.JSON(http.StatusBadRequest, errors.BadRequestErr)
 	}
 
@@ -118,12 +123,14 @@ func (r *Routes) LoginUser(c echo.Context) error {
 	token, err := r.UsersService.GetJWT(creds.Email, creds.Password, minutes, false)
 	if err != nil {
 		r.Log.Errorln("failed to get JWT", err)
+
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
 	refreshToken, err := r.UsersService.GetRefreshToken(creds.Email, creds.Password, false)
 	if err != nil {
 		r.Log.Errorln("failed to get refresh token", err)
+
 		return c.JSON(http.StatusInternalServerError, errors.InternalServerErr)
 	}
 
@@ -145,9 +152,11 @@ func (r *Routes) getNewAccessToken(c echo.Context) error {
 	if err != nil {
 		if goerrors.Is(err, jwt.ErrTokenExpired) {
 			r.Log.Errorln("token expired")
+
 			return c.JSON(http.StatusUnauthorized, errors.TokenExpiredErr)
 		}
 		r.Log.Errorln("failed to parse token", err)
+
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
@@ -155,12 +164,14 @@ func (r *Routes) getNewAccessToken(c echo.Context) error {
 	user, err := r.UsersService.GetUserByRefreshToken(refreshToken)
 	if err != nil {
 		r.Log.Errorln("failed to get user by refresh accessToken", err)
+
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
-	//check if user in DB is the same as in token
+	// check if user in DB is the same as in token
 	if user.Email != claims.Email && user.Id != claims.Id {
 		r.Log.Errorln("user in token is not the same as in DB")
+
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
@@ -168,12 +179,14 @@ func (r *Routes) getNewAccessToken(c echo.Context) error {
 	accessToken, err := r.UsersService.GetJWT(user.Email, "", minutes, true)
 	if err != nil {
 		r.Log.Errorln("failed to get JWT", err)
+
 		return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 	}
 
 	newRefreshToken, err := r.UsersService.GetRefreshToken(user.Email, "", true)
 	if err != nil {
 		r.Log.Errorln("failed to get refresh token", err)
+
 		return c.JSON(http.StatusInternalServerError, errors.InternalServerErr)
 	}
 

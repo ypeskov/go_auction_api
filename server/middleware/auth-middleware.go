@@ -12,19 +12,24 @@ import (
 	"ypeskov/go_hillel_9/services"
 )
 
-func AuthMiddleware(logger *log.Logger, cfg *config.Config, userService services.UsersServiceInterface) echo.MiddlewareFunc {
+const numberPartsOfToken = 2
+
+func AuthMiddleware(logger *log.Logger, cfg *config.Config,
+	userService services.UsersServiceInterface) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			authTokenHeader := c.Request().Header.Get("Auth-Token")
 
 			if authTokenHeader == "" {
 				logger.Errorln("auth token is empty")
+
 				return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 			}
 
 			tokenHeaderParts := strings.Split(authTokenHeader, "Bearer ")
-			if len(tokenHeaderParts) != 2 {
+			if len(tokenHeaderParts) != numberPartsOfToken {
 				logger.Errorln("invalid token format. Expected [Bearer <token>]")
+
 				return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 			}
 			token := tokenHeaderParts[1]
@@ -36,15 +41,18 @@ func AuthMiddleware(logger *log.Logger, cfg *config.Config, userService services
 			if err != nil {
 				if goerrors.Is(err, jwt.ErrTokenExpired) {
 					logger.Errorln("token expired")
+
 					return c.JSON(http.StatusUnauthorized, errors.TokenExpiredErr)
 				}
 				logger.Errorln("failed to parse token", err)
+
 				return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 			}
 
 			user := userService.GetUserByEmail(claims.Email)
 			if user == nil {
 				logger.Errorln("user not found")
+
 				return c.JSON(http.StatusUnauthorized, errors.UnauthorizedErr)
 			}
 			c.Set("user", user)
