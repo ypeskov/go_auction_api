@@ -1,6 +1,7 @@
 package services
 
 import (
+	goErrors "errors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -43,6 +44,10 @@ func GetUserService(userRepo repositories.UserRepositoryInterface,
 }
 
 func (us *UsersService) CreateUser(srcUser *models.User) (*models.User, error) {
+	if len(srcUser.PasswordHash) == 0 {
+		return nil, goErrors.New("password too short to be a bcrypted password")
+	}
+
 	hash, err := hashPassword(srcUser.PasswordHash)
 	if err != nil {
 		us.log.Error("failed to hash password", err)

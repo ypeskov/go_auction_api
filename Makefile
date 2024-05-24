@@ -2,12 +2,12 @@
 
 test:
 	@echo "Running tests..."
-	go test ./... -coverprofile=coverage.out
+	go-acc ./... --ignore internal,docs,server,cmd,repository/repositories/mocks,repository/models,repository/repositories
 
 cover:
 	@echo "Generating HTML coverage report..."
-	go tool cover -html=coverage.out
+	go tool cover -html=coverage.txt
 
 coverfunc:
 	@echo "Generating function coverage report..."
-	go tool cover -func=coverage.out
+	go tool cover -func=coverage.txt
