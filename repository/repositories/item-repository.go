@@ -73,7 +73,7 @@ func (r *ItemRepository) GetItemById(id int, userId int) (*models.Item, error) {
 
 	err := r.db.Get(&item, "SELECT * FROM items WHERE id = $1 AND user_id = $2", id, userId)
 	if err != nil {
-		r.log.Error("failed to get item by id", err)
+		r.log.Errorln("failed to get item by id", err)
 		return nil, err
 	}
 

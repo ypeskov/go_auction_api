@@ -106,7 +106,7 @@ func (r *Routes) getItem(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		r.Log.Error("failed to convert id to int!!!", err)
+		r.Log.Errorln("failed to convert id to int!!!", err)
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
 
@@ -119,7 +119,7 @@ func (r *Routes) getItem(c echo.Context) error {
 
 	item, err := r.ItemsService.GetItemById(id, user.Id)
 	if err != nil {
-		r.Log.Error("failed to get item by id", err)
+		r.Log.Errorln("failed to get item by id", err)
 		return c.JSON(http.StatusNotFound, errors.NewError("ITEM_NOT_FOUND", "Item not found"))
 	}
 
