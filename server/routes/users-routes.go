@@ -70,7 +70,7 @@ func (r *Routes) createUser(c echo.Context) error {
 
 	err := c.Bind(req)
 	if err != nil {
-		r.Log.Error("failed to parse request body", err)
+		r.Log.Errorln("failed to parse request body", err)
 
 		return c.JSON(http.StatusBadRequest,
 			errors.NewError("BAD_REQUEST", "Failed to parse request body"))
@@ -80,13 +80,12 @@ func (r *Routes) createUser(c echo.Context) error {
 	if err != nil {
 		r.Log.Errorln("failed to validate request body", err)
 
-		return c.JSON(http.StatusBadRequest,
-			errors.NewError("VALIDATION_FAILED", err.Error()))
+		return c.JSON(http.StatusBadRequest, errors.NewError("VALIDATION_FAILED", err.Error()))
 	}
 
 	newUser, err := r.UsersService.CreateUser(req)
 	if err != nil {
-		r.Log.Error("failed to create user", err)
+		r.Log.Errorln("failed to create user", err)
 
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create user"))

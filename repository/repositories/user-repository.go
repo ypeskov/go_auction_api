@@ -45,12 +45,14 @@ func (r *UserRepository) CreateUser(srcUser *models.User) (*models.User, error) 
 	now := time.Now().UTC()
 	srcUser.LastLoginUtc = now
 
-	insertQuery := `INSERT INTO users (first_name, last_name, email, password_hash, last_login_utc) 
-                    VALUES (:first_name, :last_name, :email, :password_hash, :last_login_utc) RETURNING *`
+	insertQuery := `INSERT INTO users (first_name, last_name, email, password_hash, last_login_utc, user_type_id) 
+                    VALUES (:first_name, :last_name, :email, :password_hash, :last_login_utc, :user_type_id) 
+                    RETURNING *`
 
 	rows, err := r.db.NamedQuery(insertQuery, srcUser)
 	if err != nil {
-		r.log.Error("failed to insert srcUser into db", err)
+		r.log.Errorln("failed to insert srcUser into db", err)
+		r.log.Errorf("srcUser: %+v\n", srcUser)
 
 		return nil, err
 	}

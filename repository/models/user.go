@@ -12,10 +12,14 @@ type User struct {
 	Email        string    `json:"email" validate:"required,email,min=1"`
 	PasswordHash string    `json:"password" db:"password_hash"`
 	LastLoginUtc time.Time `db:"last_login_utc"`
+	UserTypeId   int32     `json:"userTypeId" validate:"required" db:"user_type_id"`
 }
 
 func (u *User) Validate() error {
 	validate := validator.New()
-
-	return validate.Struct(u)
+	err := validate.Struct(u)
+	if err != nil {
+		return err
+	}
+	return nil
 }
