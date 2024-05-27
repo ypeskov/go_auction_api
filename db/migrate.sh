@@ -8,7 +8,6 @@ db_host=${DB_HOST:-localhost}
 db_port=${DB_PORT:-5432}
 db_name=${DB_NAME:-auction}
 
-# Проверка наличия необходимых параметров
 if [ -z "$user" ]; then
   echo "No database user specified."
   exit 1
@@ -47,6 +46,12 @@ if [ "$action" != "up" ] && [ "$action" != "down" ]; then
   exit 1
 fi
 
+migration_number=$2
+
 db_url="postgres://$user:$password@$db_host:$db_port/$db_name?sslmode=disable"
 
-migrate -database "$db_url" -path migrations $action
+if [ -z "$migration_number" ]; then
+  migrate -database "$db_url" -path migrations $action
+else
+  migrate -database "$db_url" -path migrations $action $migration_number
+fi
