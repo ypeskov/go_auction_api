@@ -18,6 +18,7 @@ type ItemRepositoryInterface interface {
 	GetItemById(id int, userId int) (*models.Item, error)
 	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
 	DeleteItem(id int, userId int) error
+	GetAllItems() ([]*models.Item, error)
 }
 
 func GetItemRepository(log *log.Logger, connection database.Database) ItemRepositoryInterface {
@@ -139,4 +140,17 @@ func (r *ItemRepository) DeleteItem(id int, userId int) error {
 	}
 
 	return nil
+}
+
+func (r *ItemRepository) GetAllItems() ([]*models.Item, error) {
+	var items []*models.Item
+
+	err := r.db.Select(&items, "SELECT * FROM items")
+	if err != nil {
+		r.log.Error("failed to get items from db", err)
+
+		return nil, err
+	}
+
+	return items, nil
 }

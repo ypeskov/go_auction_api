@@ -12,6 +12,7 @@ import (
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/", r.getItemsList)
+	g.GET("/all", r.getAllItems)
 	g.POST("/", r.createItem)
 	g.GET("/:id", r.getItem)
 	g.PUT("/:id", r.updateItem)
@@ -238,4 +239,17 @@ func (r *Routes) deleteItem(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *Routes) getAllItems(c echo.Context) error {
+	r.Log.Infof("Getting all items ...")
+	items, err := r.ItemsService.GetAllItems()
+	if err != nil {
+		r.Log.Error("failed to get items from db", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get items from db"))
+	}
+
+	return c.JSON(http.StatusOK, &items)
 }
