@@ -13,6 +13,7 @@ import (
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/", r.getItemsList)
 	g.GET("/all", r.getAllItems)
+	g.POST("/comments", r.createItemComment)
 	g.POST("/", r.createItem)
 	g.GET("/:id", r.getItem)
 	g.PUT("/:id", r.updateItem)
@@ -252,4 +253,40 @@ func (r *Routes) getAllItems(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, &items)
+}
+
+func (r *Routes) createItemComment(c echo.Context) error {
+	r.Log.Infof("Creating item comment ...")
+
+	itemComment := new(models.ItemComment)
+
+	err := c.Bind(itemComment)
+	if err != nil {
+		r.Log.Error("failed to parse request body", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to parse request body"))
+	}
+
+	err = itemComment.Validate()
+	if err != nil {
+		r.Log.Error("validation failed: ", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
+	}
+
+	user := c.Get("user").(*models.User)
+	itemComment.UserId = user.Id
+	comment, err := r.ItemsService.CreateItemComment(itemComment)
+	if err != nil {
+		r.Log.Errorln("failed to create item comment", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create item comment"))
+	}
+
+	r.Log.Infof("Inserted ID: %d", comment.Id)
+
+	return c.JSON(http.StatusCreated, &comment)
 }

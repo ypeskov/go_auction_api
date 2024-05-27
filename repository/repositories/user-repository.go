@@ -120,7 +120,7 @@ func (r *UserRepository) GetUserByRefreshToken(token string) *models.User {
 func (r *UserRepository) GetUserType(user *models.User) (*models.UserType, error) {
 	var userType models.UserType
 
-	err := r.db.Get(&userType, "SELECT * FROM user_types WHERE id = $1", &user.UserTypeId)
+	err := r.db.Get(&userType, "SELECT * FROM user_types WHERE id = $1", user.UserTypeId)
 	if err != nil {
 		r.log.Error("failed to get user type from db", err)
 

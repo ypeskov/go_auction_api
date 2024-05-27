@@ -21,6 +21,7 @@ type ItemsServiceInterface interface {
 	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
 	DeleteItem(id int, userid int) error
 	GetAllItems() ([]*models.Item, error)
+	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -79,4 +80,8 @@ func canUserAddItem(user *models.User, userTypes []*models.UserType) bool {
 	}
 
 	return user.UserTypeId == sellerTypeId
+}
+
+func (is *ItemService) CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error) {
+	return is.itemRepo.CreateItemComment(comment)
 }
