@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
+	"ypeskov/go_hillel_9/services"
 )
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
@@ -81,9 +82,14 @@ func (r *Routes) createItem(c echo.Context) error {
 
 	user := c.Get("user").(*models.User)
 	req.UserId = user.Id
-	item, err := r.ItemsService.CreateItem(req)
+	item, err := r.ItemsService.CreateItem(req, user)
 	if err != nil {
-		r.Log.Error("failed to create item", err)
+		r.Log.Errorln("failed to create item", err)
+		if goerrors.Is(err, services.IncorrectUserRoleErr) {
+
+			return c.JSON(http.StatusForbidden,
+				errors.NewError("INCORRECT_USER_ROLE", "User is not a seller"))
+		}
 
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create item"))

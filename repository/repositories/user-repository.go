@@ -19,6 +19,7 @@ type UserRepositoryInterface interface {
 	GetUserByEmail(email string) *models.User
 	AddOrUpdateRefreshToken(userId int, token string) error
 	GetUserByRefreshToken(token string) *models.User
+	GetUserType(user *models.User) (*models.UserType, error)
 }
 
 func GetUserRepository(log *log.Logger, connection database.Database) UserRepositoryInterface {
@@ -114,4 +115,17 @@ func (r *UserRepository) GetUserByRefreshToken(token string) *models.User {
 	}
 
 	return &user
+}
+
+func (r *UserRepository) GetUserType(user *models.User) (*models.UserType, error) {
+	var userType models.UserType
+
+	err := r.db.Get(&userType, "SELECT * FROM user_types WHERE id = $1", &user.UserTypeId)
+	if err != nil {
+		r.log.Error("failed to get user type from db", err)
+
+		return nil, err
+	}
+
+	return &userType, nil
 }

@@ -153,3 +153,7 @@ func (us *UsersService) GetUserByRefreshToken(token string) (*models.User, error
 
 	return user, nil
 }
+
+func (us *UsersService) GetUserType(user *models.User) (*models.UserType, error) {
+	return us.userRepo.GetUserType(user)
+}

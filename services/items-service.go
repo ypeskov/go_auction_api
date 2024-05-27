@@ -8,26 +8,29 @@ import (
 )
 
 type ItemService struct {
-	log      *log.Logger
-	cfg      *config.Config
-	itemRepo repositories.ItemRepositoryInterface
+	log          *log.Logger
+	cfg          *config.Config
+	itemRepo     repositories.ItemRepositoryInterface
+	userTypeRepo repositories.UserTypeRepositoryInterface
 }
 
 type ItemsServiceInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
-	CreateItem(srcItem *models.Item) (*models.Item, error)
+	CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error)
 	GetItemById(id int, userId int) (*models.Item, error)
 	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
 	DeleteItem(id int, userid int) error
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
+	userTypeRepo repositories.UserTypeRepositoryInterface,
 	log *log.Logger, cfg *config.Config) ItemsServiceInterface {
 
 	return &ItemService{
-		log:      log,
-		cfg:      cfg,
-		itemRepo: itemRepo,
+		log:          log,
+		cfg:          cfg,
+		itemRepo:     itemRepo,
+		userTypeRepo: userTypeRepo,
 	}
 }
 
@@ -35,7 +38,24 @@ func (is *ItemService) GetItemsList(userId int) ([]*models.Item, error) {
 	return is.itemRepo.GetItemsList(userId)
 }
 
-func (is *ItemService) CreateItem(srcItem *models.Item) (*models.Item, error) {
+func (is *ItemService) CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error) {
+	is.log.Infof("Creating item: %+v\n", srcItem)
+	userTypes, err := is.userTypeRepo.GetUserTypesList()
+	if err != nil {
+		return nil, err
+	}
+
+	var sellerTypeId int32
+	for _, userType := range userTypes {
+		if userType.TypeCode == "SELLER" {
+			sellerTypeId = int32(userType.Id)
+		}
+	}
+	if user.UserTypeId != sellerTypeId {
+		is.log.Errorf("User type is not SELLER: %+v\n", srcItem)
+		return nil, IncorrectUserRoleErr
+	}
+
 	return is.itemRepo.CreateItem(srcItem)
 }
 
