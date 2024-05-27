@@ -39,21 +39,15 @@ func (is *ItemService) GetItemsList(userId int) ([]*models.Item, error) {
 }
 
 func (is *ItemService) CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error) {
-	is.log.Infof("Creating item: %+v\n", srcItem)
 	userTypes, err := is.userTypeRepo.GetUserTypesList()
 	if err != nil {
 		return nil, err
 	}
 
-	var sellerTypeId int32
-	for _, userType := range userTypes {
-		if userType.TypeCode == "SELLER" {
-			sellerTypeId = int32(userType.Id)
-		}
-	}
-	if user.UserTypeId != sellerTypeId {
+	if !canUserAddItem(user, userTypes) {
 		is.log.Errorf("User type is not SELLER: %+v\n", srcItem)
 		return nil, IncorrectUserRoleErr
+
 	}
 
 	return is.itemRepo.CreateItem(srcItem)
@@ -69,4 +63,15 @@ func (is *ItemService) UpdateItem(id int, srcItem *models.Item, userId int) (*mo
 
 func (is *ItemService) DeleteItem(id int, userId int) error {
 	return is.itemRepo.DeleteItem(id, userId)
+}
+
+func canUserAddItem(user *models.User, userTypes []*models.UserType) bool {
+	var sellerTypeId int32
+	for _, userType := range userTypes {
+		if userType.TypeCode == "SELLER" {
+			sellerTypeId = int32(userType.Id)
+		}
+	}
+
+	return user.UserTypeId == sellerTypeId
 }
