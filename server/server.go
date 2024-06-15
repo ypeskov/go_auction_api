@@ -39,5 +39,6 @@ func New(cfg *config.Config, handlers *routes.Routes) *Server {
 
 func (s *Server) Start() error {
 	s.log.Infof("Starting the server on port %s", s.port)
+
 	return s.e.Start(s.port)
 }

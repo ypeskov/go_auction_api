@@ -15,5 +15,6 @@ type Item struct {
 
 func (i *Item) Validate() error {
 	validate := validator.New()
+
 	return validate.Struct(i)
 }

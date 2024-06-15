@@ -1,6 +1,7 @@
 package services
 
 import (
+	goErrors "errors"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -43,9 +44,14 @@ func GetUserService(userRepo repositories.UserRepositoryInterface,
 }
 
 func (us *UsersService) CreateUser(srcUser *models.User) (*models.User, error) {
+	if len(srcUser.PasswordHash) == 0 {
+		return nil, goErrors.New("password too short to be a bcrypted password")
+	}
+
 	hash, err := hashPassword(srcUser.PasswordHash)
 	if err != nil {
 		us.log.Error("failed to hash password", err)
+
 		return nil, err
 	}
 	srcUser.PasswordHash = hash
@@ -57,7 +63,10 @@ func (us *UsersService) GetUsersList() ([]*models.User, error) {
 	return us.userRepo.GetUsersList()
 }
 
-func (us *UsersService) GetJWT(email string, password string, minutes time.Duration, refreshToken bool) (string, error) {
+func (us *UsersService) GetJWT(email string,
+	password string,
+	minutes time.Duration,
+	refreshToken bool) (string, error) {
 	user := us.userRepo.GetUserByEmail(email)
 	if user == nil {
 		return "", errors.NotFoundErr
@@ -84,6 +93,7 @@ func (us *UsersService) GetJWT(email string, password string, minutes time.Durat
 	tokenString, err := token.SignedString([]byte(us.cfg.SecretKey))
 	if err != nil {
 		us.log.Errorln("failed to sign token: ", err)
+
 		return "", errors.InternalServerErr
 	}
 
@@ -100,12 +110,14 @@ func (us *UsersService) GetRefreshToken(email string, password string, update bo
 	token, err := us.GetJWT(email, password, minutes, update)
 	if err != nil {
 		us.log.Errorln("failed to get JWT", err)
+
 		return "", err
 	}
 
 	err = us.userRepo.AddOrUpdateRefreshToken(user.Id, token)
 	if err != nil {
 		us.log.Errorln("failed to add refresh token", err)
+
 		return "", errors.InternalServerErr
 	}
 
@@ -121,11 +133,13 @@ func hashPassword(password string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(bytes), nil
 }
 
 func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+
 	return err == nil
 }
 
@@ -133,6 +147,7 @@ func (us *UsersService) GetUserByRefreshToken(token string) (*models.User, error
 	user := us.userRepo.GetUserByRefreshToken(token)
 	if user == nil {
 		us.log.Errorln("failed to get user by refresh token")
+
 		return nil, errors.UnauthorizedErr
 	}
 

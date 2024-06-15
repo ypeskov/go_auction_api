@@ -6,6 +6,11 @@
 3. Run bash build-and-run.sh (MacOS/Linux). Windows is not supported.
 4. The server will be running on localhost:3000
 
+# Run Linter
+golangci-lint run
+
+# Run Tests
+make test && make coverfunc
 
 Directory Tree
 

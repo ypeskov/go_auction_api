@@ -13,6 +13,7 @@ func main() {
 	cfg, err := config.NewConfig()
 	if err != nil {
 		fmt.Printf("Error loading config: %v\n", err)
+
 		return
 	}
 
