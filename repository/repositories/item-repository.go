@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+	"time"
 	"ypeskov/go_hillel_9/internal/database"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/internal/log"
@@ -18,6 +20,8 @@ type ItemRepositoryInterface interface {
 	GetItemById(id int, userId int) (*models.Item, error)
 	UpdateItem(id int, srcItem *models.Item, userId int) (*models.Item, error)
 	DeleteItem(id int, userId int) error
+	GetAllItems() ([]*models.Item, error)
+	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
 }
 
 func GetItemRepository(log *log.Logger, connection database.Database) ItemRepositoryInterface {
@@ -41,7 +45,8 @@ func (r *ItemRepository) GetItemsList(userId int) ([]*models.Item, error) {
 }
 
 func (r *ItemRepository) CreateItem(srcItem *models.Item) (*models.Item, error) {
-	insertQuery := "INSERT INTO items (user_id, title, initial_price, description) VALUES ($1, $2, $3, $4) RETURNING *"
+	insertQuery := `INSERT INTO items (user_id, title, initial_price, description) 
+					VALUES ($1, $2, $3, $4) RETURNING *`
 	row, err := r.db.Query(insertQuery, srcItem.UserId, srcItem.Title, srcItem.InitialPrice, srcItem.Description)
 	if err != nil {
 		r.log.Error("failed to insert srcItem into db", err)
@@ -139,4 +144,47 @@ func (r *ItemRepository) DeleteItem(id int, userId int) error {
 	}
 
 	return nil
+}
+
+func (r *ItemRepository) GetAllItems() ([]*models.Item, error) {
+	var items []*models.Item
+
+	err := r.db.Select(&items, "SELECT * FROM items")
+	if err != nil {
+		r.log.Error("failed to get items from db", err)
+
+		return nil, err
+	}
+
+	return items, nil
+}
+
+func (r *ItemRepository) CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error) {
+	now := time.Now()
+	comment.CreatedAt = now
+
+	insertQuery := `INSERT INTO item_comments (user_id, item_id, comment, created_at) 
+					VALUES (:user_id, :item_id, :comment, :created_at) RETURNING *`
+
+	rows, err := r.db.NamedQuery(insertQuery, comment)
+	if err != nil {
+		r.log.Error("failed to insert comment into db", err)
+		r.log.Errorf("comment: %+v\n", comment)
+
+		return nil, err
+	}
+
+	var newComment models.ItemComment
+	if rows.Next() {
+		err := rows.StructScan(&newComment)
+		if err != nil {
+			r.log.Errorf("Failed to scan comment: %v", err)
+
+			return nil, err
+		}
+	} else {
+		return nil, fmt.Errorf("failed to add a new comment")
+	}
+
+	return &newComment, nil
 }

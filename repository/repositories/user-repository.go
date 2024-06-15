@@ -19,6 +19,7 @@ type UserRepositoryInterface interface {
 	GetUserByEmail(email string) *models.User
 	AddOrUpdateRefreshToken(userId int, token string) error
 	GetUserByRefreshToken(token string) *models.User
+	GetUserType(user *models.User) (*models.UserType, error)
 }
 
 func GetUserRepository(log *log.Logger, connection database.Database) UserRepositoryInterface {
@@ -45,12 +46,14 @@ func (r *UserRepository) CreateUser(srcUser *models.User) (*models.User, error) 
 	now := time.Now().UTC()
 	srcUser.LastLoginUtc = now
 
-	insertQuery := `INSERT INTO users (first_name, last_name, email, password_hash, last_login_utc) 
-                    VALUES (:first_name, :last_name, :email, :password_hash, :last_login_utc) RETURNING *`
+	insertQuery := `INSERT INTO users (first_name, last_name, email, password_hash, last_login_utc, user_type_id) 
+                    VALUES (:first_name, :last_name, :email, :password_hash, :last_login_utc, :user_type_id) 
+                    RETURNING *`
 
 	rows, err := r.db.NamedQuery(insertQuery, srcUser)
 	if err != nil {
-		r.log.Error("failed to insert srcUser into db", err)
+		r.log.Errorln("failed to insert srcUser into db", err)
+		r.log.Errorf("srcUser: %+v\n", srcUser)
 
 		return nil, err
 	}
@@ -112,4 +115,17 @@ func (r *UserRepository) GetUserByRefreshToken(token string) *models.User {
 	}
 
 	return &user
+}
+
+func (r *UserRepository) GetUserType(user *models.User) (*models.UserType, error) {
+	var userType models.UserType
+
+	err := r.db.Get(&userType, "SELECT * FROM user_types WHERE id = $1", user.UserTypeId)
+	if err != nil {
+		r.log.Error("failed to get user type from db", err)
+
+		return nil, err
+	}
+
+	return &userType, nil
 }

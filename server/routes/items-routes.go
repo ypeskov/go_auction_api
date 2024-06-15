@@ -7,10 +7,13 @@ import (
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
+	"ypeskov/go_hillel_9/services"
 )
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/", r.getItemsList)
+	g.GET("/all", r.getAllItems)
+	g.POST("/comments", r.createItemComment)
 	g.POST("/", r.createItem)
 	g.GET("/:id", r.getItem)
 	g.PUT("/:id", r.updateItem)
@@ -81,9 +84,14 @@ func (r *Routes) createItem(c echo.Context) error {
 
 	user := c.Get("user").(*models.User)
 	req.UserId = user.Id
-	item, err := r.ItemsService.CreateItem(req)
+	item, err := r.ItemsService.CreateItem(req, user)
 	if err != nil {
-		r.Log.Error("failed to create item", err)
+		r.Log.Errorln("failed to create item", err)
+		if goerrors.Is(err, services.IncorrectUserRoleErr) {
+
+			return c.JSON(http.StatusForbidden,
+				errors.NewError("INCORRECT_USER_ROLE", "User is not a seller"))
+		}
 
 		return c.JSON(http.StatusInternalServerError,
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create item"))
@@ -232,4 +240,53 @@ func (r *Routes) deleteItem(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (r *Routes) getAllItems(c echo.Context) error {
+	r.Log.Infof("Getting all items ...")
+	items, err := r.ItemsService.GetAllItems()
+	if err != nil {
+		r.Log.Error("failed to get items from db", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to get items from db"))
+	}
+
+	return c.JSON(http.StatusOK, &items)
+}
+
+func (r *Routes) createItemComment(c echo.Context) error {
+	r.Log.Infof("Creating item comment ...")
+
+	itemComment := new(models.ItemComment)
+
+	err := c.Bind(itemComment)
+	if err != nil {
+		r.Log.Error("failed to parse request body", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to parse request body"))
+	}
+
+	err = itemComment.Validate()
+	if err != nil {
+		r.Log.Error("validation failed: ", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError(errors.ValidationFailedErr.Code, err.Error()))
+	}
+
+	user := c.Get("user").(*models.User)
+	itemComment.UserId = user.Id
+	comment, err := r.ItemsService.CreateItemComment(itemComment)
+	if err != nil {
+		r.Log.Errorln("failed to create item comment", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create item comment"))
+	}
+
+	r.Log.Infof("Inserted ID: %d", comment.Id)
+
+	return c.JSON(http.StatusCreated, &comment)
 }
