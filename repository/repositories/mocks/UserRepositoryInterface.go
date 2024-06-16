@@ -101,6 +101,36 @@ func (_m *UserRepositoryInterface) GetUserByRefreshToken(token string) *models.U
 	return r0
 }
 
+// GetUserType provides a mock function with given fields: user
+func (_m *UserRepositoryInterface) GetUserType(user *models.User) (*models.UserType, error) {
+	ret := _m.Called(user)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUserType")
+	}
+
+	var r0 *models.UserType
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*models.User) (*models.UserType, error)); ok {
+		return rf(user)
+	}
+	if rf, ok := ret.Get(0).(func(*models.User) *models.UserType); ok {
+		r0 = rf(user)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.UserType)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*models.User) error); ok {
+		r1 = rf(user)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetUsersList provides a mock function with given fields:
 func (_m *UserRepositoryInterface) GetUsersList() ([]*models.User, error) {
 	ret := _m.Called()

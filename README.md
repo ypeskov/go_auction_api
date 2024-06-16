@@ -3,67 +3,34 @@
 # Installation
 1. Clone the repository git clone git@github.com:ypeskov/go_auction_api.git [folder]
 2. cd [folder]
-3. Run bash build-and-run.sh (MacOS/Linux). Windows is not supported.
+3. Run bash build-and-run.sh (macOS/Linux). Windows is not supported.
 4. The server will be running on localhost:3000
 
 # Run Linter
+```bash
 golangci-lint run
+```
 
 # Run Tests
+```bash
 make test && make coverfunc
+```
 
-Directory Tree
+# Packages for migration
+```bash
+go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+```
 
-.\
-├── Dockerfile\
-├── README.md\
-├── build-and-run.sh\
-├── cmd\
-│   └── main.go\
-├── db\
-│   ├── migrate.sh\
-│   ├── migrations\
-│   │   ├── 000001_create_users_table.down.sql\
-│   │   ├── 000001_create_users_table.up.sql\
-│   │   ├── 000002_add_passwordhash.down.sql\
-│   │   └── 000002_add_passwordhash.up.sql\
-│   └── tmp\
-│       └── build-errors.log\
-├── docker-compose.yml\
-├── docs\
-│   ├── docs.go\
-│   ├── swagger.json\
-│   └── swagger.yaml\
-├── go.mod\
-├── go.sum\
-├── internal\
-│   ├── config\
-│   │   └── config.go\
-│   ├── database\
-│   │   └── database.go\
-│   ├── errors\
-│   │   └── errors.go\
-│   └── log\
-│       └── logger.go\
-├── proj.html\
-├── repository\
-│   ├── models\
-│   │   ├── item.go\
-│   │   └── user.go\
-│   └── repositories\
-│       ├── item-repository.go\
-│       └── user-repository.go\
-├── server\
-│   ├── middleware\
-│   │   └── auth-middleware.go\
-│   ├── routes\
-│   │   ├── items-routes.go\
-│   │   ├── routes.go\
-│   │   └── users-routes.go\
-│   └── server.go\
-├── services\
-│   ├── items-service.go\
-│   └── users-service.go\
-└── tmp\
-├── build-errors.log\
-└── main
+# Create new migration
+```bash
+cd db
+migrate create -ext sql -dir ./migrations [migration_name]
+```
+
+# Run migrations
+```bash
+cd db
+./migrate.sh up
+```

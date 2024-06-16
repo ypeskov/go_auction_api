@@ -1,8 +1,13 @@
 package services
 
 import (
+	"fmt"
+	"io"
+	"mime/multipart"
+	"os"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/log"
+	"ypeskov/go_hillel_9/internal/utils"
 	"ypeskov/go_hillel_9/repository/models"
 	"ypeskov/go_hillel_9/repository/repositories"
 )
@@ -14,6 +19,13 @@ type ItemService struct {
 	userTypeRepo repositories.UserTypeRepositoryInterface
 }
 
+const uploadPath = "./uploads"
+
+type Bid struct {
+	ItemId int
+	Amount float64
+}
+
 type ItemsServiceInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error)
@@ -22,6 +34,8 @@ type ItemsServiceInterface interface {
 	DeleteItem(id int, userid int) error
 	GetAllItems() ([]*models.Item, error)
 	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
+	AttachFileToItem(itemId int, file *multipart.FileHeader) (*string, error)
+	CreateBid(bidChannel chan<- Bid, itemId int, amount float64) error
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -84,4 +98,58 @@ func canUserAddItem(user *models.User, userTypes []*models.UserType) bool {
 
 func (is *ItemService) CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error) {
 	return is.itemRepo.CreateItemComment(comment)
+}
+
+func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) (*string, error) {
+	src, err := file.Open()
+	if err != nil {
+		is.log.Error("failed to open file", err)
+
+		return nil, err
+	}
+	defer src.Close()
+
+	// Destination
+	err = utils.EnsureDir(uploadPath)
+	if err != nil {
+		is.log.Errorln("failed to ensure dir for file", err)
+
+		return nil, err
+	}
+	fileName := fmt.Sprintf("%d_%s", itemId, file.Filename)
+	fullFileName := fmt.Sprintf("%s/%s", uploadPath, fileName)
+	dst, err := os.Create(fullFileName)
+	if err != nil {
+		is.log.Errorln("failed to create file", err)
+
+		return nil, err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		is.log.Errorln("failed to copy file", err)
+
+		return nil, err
+	}
+
+	err = is.itemRepo.AttachFileToItem(itemId, fileName)
+	if err != nil {
+		is.log.Errorln("failed to attach file to item", err)
+
+		return nil, err
+	}
+
+	return &fullFileName, nil
+}
+
+func (is *ItemService) CreateBid(bidChannel chan<- Bid, itemId int, amount float64) error {
+	// TODO: add storing bid to DB
+
+	bidChannel <- Bid{
+		ItemId: itemId,
+		Amount: amount,
+	}
+
+	return nil
 }

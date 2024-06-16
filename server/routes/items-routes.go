@@ -2,12 +2,19 @@ package routes
 
 import (
 	goerrors "errors"
+	"fmt"
+	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
 	"ypeskov/go_hillel_9/services"
+)
+
+var (
+	upgrader   = websocket.Upgrader{}
+	BidChannel = make(chan services.Bid)
 )
 
 func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
@@ -18,6 +25,9 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/:id", r.getItem)
 	g.PUT("/:id", r.updateItem)
 	g.DELETE("/:id", r.deleteItem)
+	g.POST("/attach", r.attachFile)
+	g.POST("/bid", r.addBid)
+	g.GET("/process-bid", r.processBid)
 }
 
 // getItemsList retrieves a list of items.
@@ -214,7 +224,7 @@ func (r *Routes) deleteItem(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		r.Log.Error("failed to convert id to int!!!", err)
+		r.Log.Errorln("failed to convert id to int", err)
 
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
@@ -289,4 +299,97 @@ func (r *Routes) createItemComment(c echo.Context) error {
 	r.Log.Infof("Inserted ID: %d", comment.Id)
 
 	return c.JSON(http.StatusCreated, &comment)
+}
+
+func (r *Routes) attachFile(c echo.Context) error {
+	r.Log.Infof("Attaching file ...")
+
+	itemId := c.FormValue("itemId")
+	if itemId == "" {
+		r.Log.Error("itemId is empty")
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Item ID is empty"))
+	}
+	id, err := strconv.Atoi(itemId)
+	if err != nil {
+		r.Log.Error("failed to convert id to int!!!", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INVALID_ID", "Invalid ID"))
+	}
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		r.Log.Error("failed to get file from form", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to get file from form"))
+	}
+	fileName, err := r.ItemsService.AttachFileToItem(id, file)
+	if err != nil {
+		r.Log.Error("failed to attach file to item", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to attach file to item"))
+	}
+
+	r.Log.Infof("File [%s] attached to item with id: [%d]", *fileName, id)
+
+	return c.JSON(http.StatusOK, "File attached successfully")
+}
+
+func (r *Routes) addBid(c echo.Context) error {
+	r.Log.Infof("Adding bid ...")
+
+	bid := new(services.Bid)
+
+	err := c.Bind(bid)
+	if err != nil {
+		r.Log.Error("failed to parse request body", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to parse request body"))
+	}
+
+	err = r.ItemsService.CreateBid(BidChannel, bid.ItemId, bid.Amount)
+	if err != nil {
+		r.Log.Error("failed to create bid", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create bid"))
+	}
+
+	return c.JSON(http.StatusOK, "Bid added successfully")
+}
+
+func (r *Routes) processBid(c echo.Context) error {
+	r.Log.Infof("Creating websocket connection ...")
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+	defer ws.Close()
+
+	for {
+		bid := <-BidChannel
+		r.Log.Infof("Processing bid: %v", bid)
+		// Write
+		err := ws.WriteMessage(websocket.TextMessage,
+			[]byte(fmt.Sprintf("Bid. Item ID: %d, Amount: %.2f", bid.ItemId, bid.Amount)))
+		if err != nil {
+			r.Log.Errorln(err)
+			break
+		}
+
+		// Read
+		_, msg, err := ws.ReadMessage()
+		if err != nil {
+			r.Log.Errorln(err)
+			break
+		}
+		r.Log.Infof("Received: %s", msg)
+	}
+
+	return nil
 }
