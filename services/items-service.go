@@ -1,6 +1,7 @@
 package services
 
 import (
+	"mime/multipart"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/log"
 	"ypeskov/go_hillel_9/repository/models"
@@ -84,4 +85,8 @@ func canUserAddItem(user *models.User, userTypes []*models.UserType) bool {
 
 func (is *ItemService) CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error) {
 	return is.itemRepo.CreateItemComment(comment)
+}
+
+func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) error {
+	return nil
 }

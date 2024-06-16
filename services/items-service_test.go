@@ -13,10 +13,11 @@ import (
 
 func TestGetItemsList(t *testing.T) {
 	mockRepo := new(mocks.ItemRepositoryInterface)
+	mockUserTypeRepo := new(mocks.UserTypeRepositoryInterface)
 	mockCfg, _ := config.NewConfig()
 	mockLog := log.New(mockCfg)
 
-	service := GetItemService(mockRepo, mockLog, mockCfg)
+	service := GetItemService(mockRepo, mockUserTypeRepo, mockLog, mockCfg)
 
 	userId := 1
 	expectedItems := []*models.Item{
@@ -46,10 +47,11 @@ func TestGetItemsList(t *testing.T) {
 
 func TestCreateItem(t *testing.T) {
 	mockRepo := new(mocks.ItemRepositoryInterface)
+	mockUserTypeRepo := new(mocks.UserTypeRepositoryInterface)
 	mockCfg, _ := config.NewConfig()
 	mockLog := log.New(mockCfg)
 
-	service := GetItemService(mockRepo, mockLog, mockCfg)
+	service := GetItemService(mockRepo, mockUserTypeRepo, mockLog, mockCfg)
 
 	srcItem := &models.Item{
 		UserId:       1,
@@ -65,9 +67,17 @@ func TestCreateItem(t *testing.T) {
 		SoldPrice:    nil,
 		Description:  nil}
 
-	mockRepo.On("CreateItem", srcItem).Return(expectedItem, nil)
+	user := &models.User{
+		Id:         1,
+		FirstName:  "Test",
+		LastName:   "User",
+		Email:      "example@example.com",
+		UserTypeId: 1,
+	}
 
-	item, err := service.CreateItem(srcItem)
+	mockRepo.On("CreateItem", srcItem, user).Return(expectedItem, nil)
+
+	item, err := service.CreateItem(srcItem, user)
 	fmt.Printf("%+v\n", item)
 	assert.NoError(t, err)
 	assert.Equal(t, expectedItem, item)
@@ -76,10 +86,11 @@ func TestCreateItem(t *testing.T) {
 
 func TestGetItemById(t *testing.T) {
 	mockRepo := new(mocks.ItemRepositoryInterface)
+	mockUserTypeRepo := new(mocks.UserTypeRepositoryInterface)
 	mockCfg, _ := config.NewConfig()
 	mockLog := log.New(mockCfg)
 
-	service := GetItemService(mockRepo, mockLog, mockCfg)
+	service := GetItemService(mockRepo, mockUserTypeRepo, mockLog, mockCfg)
 
 	tests := []struct {
 		name         string
@@ -154,10 +165,11 @@ func TestGetItemById(t *testing.T) {
 
 func TestUpdateItem(t *testing.T) {
 	mockRepo := new(mocks.ItemRepositoryInterface)
+	mockUserTypeRepo := new(mocks.UserTypeRepositoryInterface)
 	mockCfg, _ := config.NewConfig()
 	mockLog := log.New(mockCfg)
 
-	service := GetItemService(mockRepo, mockLog, mockCfg)
+	service := GetItemService(mockRepo, mockUserTypeRepo, mockLog, mockCfg)
 
 	itemID := 1
 	userID := 1
@@ -188,10 +200,11 @@ func TestUpdateItem(t *testing.T) {
 
 func TestDeleteItem(t *testing.T) {
 	mockRepo := new(mocks.ItemRepositoryInterface)
+	mockUserTypeRepo := new(mocks.UserTypeRepositoryInterface)
 	mockCfg, _ := config.NewConfig()
 	mockLog := log.New(mockCfg)
 
-	service := GetItemService(mockRepo, mockLog, mockCfg)
+	service := GetItemService(mockRepo, mockUserTypeRepo, mockLog, mockCfg)
 
 	itemID := 1
 	userID := 1

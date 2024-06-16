@@ -43,6 +43,36 @@ func (_m *ItemRepositoryInterface) CreateItem(srcItem *models.Item) (*models.Ite
 	return r0, r1
 }
 
+// CreateItemComment provides a mock function with given fields: comment
+func (_m *ItemRepositoryInterface) CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error) {
+	ret := _m.Called(comment)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CreateItemComment")
+	}
+
+	var r0 *models.ItemComment
+	var r1 error
+	if rf, ok := ret.Get(0).(func(*models.ItemComment) (*models.ItemComment, error)); ok {
+		return rf(comment)
+	}
+	if rf, ok := ret.Get(0).(func(*models.ItemComment) *models.ItemComment); ok {
+		r0 = rf(comment)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.ItemComment)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(*models.ItemComment) error); ok {
+		r1 = rf(comment)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DeleteItem provides a mock function with given fields: id, userId
 func (_m *ItemRepositoryInterface) DeleteItem(id int, userId int) error {
 	ret := _m.Called(id, userId)
@@ -59,6 +89,36 @@ func (_m *ItemRepositoryInterface) DeleteItem(id int, userId int) error {
 	}
 
 	return r0
+}
+
+// GetAllItems provides a mock function with given fields:
+func (_m *ItemRepositoryInterface) GetAllItems() ([]*models.Item, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllItems")
+	}
+
+	var r0 []*models.Item
+	var r1 error
+	if rf, ok := ret.Get(0).(func() ([]*models.Item, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() []*models.Item); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*models.Item)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetItemById provides a mock function with given fields: id, userId

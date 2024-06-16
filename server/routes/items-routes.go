@@ -3,7 +3,9 @@ package routes
 import (
 	goerrors "errors"
 	"github.com/labstack/echo/v4"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
@@ -289,4 +291,44 @@ func (r *Routes) createItemComment(c echo.Context) error {
 	r.Log.Infof("Inserted ID: %d", comment.Id)
 
 	return c.JSON(http.StatusCreated, &comment)
+}
+
+func (r *Routes) attachFile(c echo.Context) error {
+	r.Log.Infof("Attaching file ...")
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		r.Log.Error("failed to get file from form", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to get file from form"))
+	}
+	src, err := file.Open()
+	if err != nil {
+		r.Log.Error("failed to open file", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to open file"))
+	}
+	defer src.Close()
+
+	// Destination
+	dst, err := os.Create(file.Filename)
+	if err != nil {
+		r.Log.Error("failed to create file", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create file"))
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		r.Log.Error("failed to copy file", err)
+
+		return c.JSON(http.StatusInternalServerError,
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to copy file"))
+	}
+
+	return c.JSON(http.StatusOK, "File attached successfully")
 }

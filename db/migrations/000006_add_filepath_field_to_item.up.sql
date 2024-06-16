@@ -1,0 +1,2 @@
+ALTER TABLE items
+    ADD COLUMN filepath VARCHAR(255);
