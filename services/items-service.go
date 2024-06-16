@@ -1,7 +1,10 @@
 package services
 
 import (
+	"fmt"
+	"io"
 	"mime/multipart"
+	"os"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/log"
 	"ypeskov/go_hillel_9/repository/models"
@@ -15,6 +18,8 @@ type ItemService struct {
 	userTypeRepo repositories.UserTypeRepositoryInterface
 }
 
+const uploadPath = "./uploads"
+
 type ItemsServiceInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error)
@@ -23,6 +28,7 @@ type ItemsServiceInterface interface {
 	DeleteItem(id int, userid int) error
 	GetAllItems() ([]*models.Item, error)
 	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
+	AttachFileToItem(itemId int, file *multipart.FileHeader) error
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -88,5 +94,38 @@ func (is *ItemService) CreateItemComment(comment *models.ItemComment) (*models.I
 }
 
 func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) error {
+	src, err := file.Open()
+	if err != nil {
+		is.log.Error("failed to open file", err)
+
+		return err
+	}
+	defer src.Close()
+
+	// Destination
+	fileName := fmt.Sprintf("%d_%s", itemId, file.Filename)
+	fullFileName := fmt.Sprintf("%s/%s", uploadPath, fileName)
+	dst, err := os.Create(fullFileName)
+	if err != nil {
+		is.log.Error("failed to create file", err)
+
+		return err
+	}
+	defer dst.Close()
+
+	// Copy
+	if _, err = io.Copy(dst, src); err != nil {
+		is.log.Error("failed to copy file", err)
+
+		return err
+	}
+
+	err = is.itemRepo.AttachFileToItem(itemId, fileName)
+	if err != nil {
+		is.log.Error("failed to attach file to item", err)
+
+		return err
+	}
+
 	return nil
 }

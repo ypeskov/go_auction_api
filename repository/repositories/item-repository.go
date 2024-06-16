@@ -22,6 +22,7 @@ type ItemRepositoryInterface interface {
 	DeleteItem(id int, userId int) error
 	GetAllItems() ([]*models.Item, error)
 	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
+	AttachFileToItem(itemId int, fileName string) error
 }
 
 func GetItemRepository(log *log.Logger, connection database.Database) ItemRepositoryInterface {
@@ -187,4 +188,16 @@ func (r *ItemRepository) CreateItemComment(comment *models.ItemComment) (*models
 	}
 
 	return &newComment, nil
+}
+
+func (r *ItemRepository) AttachFileToItem(itemId int, fileName string) error {
+	insertQuery := `UPDATE items SET filepath = $1 WHERE id = $2 RETURNING *`
+	_, err := r.db.Query(insertQuery, fileName, itemId)
+	if err != nil {
+		r.log.Error("failed to insert file into db", err)
+
+		return err
+	}
+
+	return nil
 }

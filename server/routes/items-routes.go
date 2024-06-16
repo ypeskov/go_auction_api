@@ -3,9 +3,7 @@ package routes
 import (
 	goerrors "errors"
 	"github.com/labstack/echo/v4"
-	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"ypeskov/go_hillel_9/internal/errors"
 	"ypeskov/go_hillel_9/repository/models"
@@ -20,6 +18,7 @@ func (r *Routes) RegisterItemsRoutes(g *echo.Group) {
 	g.GET("/:id", r.getItem)
 	g.PUT("/:id", r.updateItem)
 	g.DELETE("/:id", r.deleteItem)
+	g.POST("/attach", r.attachFile)
 }
 
 // getItemsList retrieves a list of items.
@@ -216,7 +215,7 @@ func (r *Routes) deleteItem(c echo.Context) error {
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		r.Log.Error("failed to convert id to int!!!", err)
+		r.Log.Errorln("failed to convert id to int", err)
 
 		return c.JSON(http.StatusBadRequest, errors.NewError("INVALID_ID", "Invalid ID"))
 	}
@@ -296,6 +295,21 @@ func (r *Routes) createItemComment(c echo.Context) error {
 func (r *Routes) attachFile(c echo.Context) error {
 	r.Log.Infof("Attaching file ...")
 
+	itemId := c.FormValue("itemId")
+	if itemId == "" {
+		r.Log.Error("itemId is empty")
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INCORRECT_REQUEST_BODY", "Item ID is empty"))
+	}
+	id, err := strconv.Atoi(itemId)
+	if err != nil {
+		r.Log.Error("failed to convert id to int!!!", err)
+
+		return c.JSON(http.StatusBadRequest,
+			errors.NewError("INVALID_ID", "Invalid ID"))
+	}
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		r.Log.Error("failed to get file from form", err)
@@ -303,32 +317,15 @@ func (r *Routes) attachFile(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest,
 			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to get file from form"))
 	}
-	src, err := file.Open()
+	err = r.ItemsService.AttachFileToItem(id, file)
 	if err != nil {
-		r.Log.Error("failed to open file", err)
+		r.Log.Error("failed to attach file to item", err)
 
 		return c.JSON(http.StatusInternalServerError,
-			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to open file"))
+			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to attach file to item"))
 	}
-	defer src.Close()
 
-	// Destination
-	dst, err := os.Create(file.Filename)
-	if err != nil {
-		r.Log.Error("failed to create file", err)
-
-		return c.JSON(http.StatusInternalServerError,
-			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to create file"))
-	}
-	defer dst.Close()
-
-	// Copy
-	if _, err = io.Copy(dst, src); err != nil {
-		r.Log.Error("failed to copy file", err)
-
-		return c.JSON(http.StatusInternalServerError,
-			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to copy file"))
-	}
+	r.Log.Infof("File attached to item with id: %d, file: %s", id, file.Filename)
 
 	return c.JSON(http.StatusOK, "File attached successfully")
 }
