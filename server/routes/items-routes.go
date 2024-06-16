@@ -317,7 +317,7 @@ func (r *Routes) attachFile(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest,
 			errors.NewError("INCORRECT_REQUEST_BODY", "Failed to get file from form"))
 	}
-	err = r.ItemsService.AttachFileToItem(id, file)
+	fileName, err := r.ItemsService.AttachFileToItem(id, file)
 	if err != nil {
 		r.Log.Error("failed to attach file to item", err)
 
@@ -325,7 +325,7 @@ func (r *Routes) attachFile(c echo.Context) error {
 			errors.NewError("INTERNAL_SERVER_ERROR", "Failed to attach file to item"))
 	}
 
-	r.Log.Infof("File attached to item with id: %d, file: %s", id, file.Filename)
+	r.Log.Infof("File [%s] attached to item with id: [%d]", *fileName, id)
 
 	return c.JSON(http.StatusOK, "File attached successfully")
 }

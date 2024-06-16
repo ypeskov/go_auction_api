@@ -29,7 +29,7 @@ type ItemsServiceInterface interface {
 	DeleteItem(id int, userid int) error
 	GetAllItems() ([]*models.Item, error)
 	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
-	AttachFileToItem(itemId int, file *multipart.FileHeader) error
+	AttachFileToItem(itemId int, file *multipart.FileHeader) (*string, error)
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -94,12 +94,12 @@ func (is *ItemService) CreateItemComment(comment *models.ItemComment) (*models.I
 	return is.itemRepo.CreateItemComment(comment)
 }
 
-func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) error {
+func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) (*string, error) {
 	src, err := file.Open()
 	if err != nil {
 		is.log.Error("failed to open file", err)
 
-		return err
+		return nil, err
 	}
 	defer src.Close()
 
@@ -108,7 +108,7 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 	if err != nil {
 		is.log.Errorln("failed to ensure dir for file", err)
 
-		return err
+		return nil, err
 	}
 	fileName := fmt.Sprintf("%d_%s", itemId, file.Filename)
 	fullFileName := fmt.Sprintf("%s/%s", uploadPath, fileName)
@@ -116,7 +116,7 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 	if err != nil {
 		is.log.Errorln("failed to create file", err)
 
-		return err
+		return nil, err
 	}
 	defer dst.Close()
 
@@ -124,15 +124,15 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 	if _, err = io.Copy(dst, src); err != nil {
 		is.log.Errorln("failed to copy file", err)
 
-		return err
+		return nil, err
 	}
 
 	err = is.itemRepo.AttachFileToItem(itemId, fileName)
 	if err != nil {
 		is.log.Errorln("failed to attach file to item", err)
 
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &fullFileName, nil
 }
