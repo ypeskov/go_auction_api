@@ -7,6 +7,7 @@ import (
 	"os"
 	"ypeskov/go_hillel_9/internal/config"
 	"ypeskov/go_hillel_9/internal/log"
+	"ypeskov/go_hillel_9/internal/utils"
 	"ypeskov/go_hillel_9/repository/models"
 	"ypeskov/go_hillel_9/repository/repositories"
 )
@@ -103,11 +104,17 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 	defer src.Close()
 
 	// Destination
+	err = utils.EnsureDir(uploadPath)
+	if err != nil {
+		is.log.Errorln("failed to ensure dir for file", err)
+
+		return err
+	}
 	fileName := fmt.Sprintf("%d_%s", itemId, file.Filename)
 	fullFileName := fmt.Sprintf("%s/%s", uploadPath, fileName)
 	dst, err := os.Create(fullFileName)
 	if err != nil {
-		is.log.Error("failed to create file", err)
+		is.log.Errorln("failed to create file", err)
 
 		return err
 	}
@@ -115,14 +122,14 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 
 	// Copy
 	if _, err = io.Copy(dst, src); err != nil {
-		is.log.Error("failed to copy file", err)
+		is.log.Errorln("failed to copy file", err)
 
 		return err
 	}
 
 	err = is.itemRepo.AttachFileToItem(itemId, fileName)
 	if err != nil {
-		is.log.Error("failed to attach file to item", err)
+		is.log.Errorln("failed to attach file to item", err)
 
 		return err
 	}
