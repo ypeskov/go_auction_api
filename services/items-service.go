@@ -21,6 +21,11 @@ type ItemService struct {
 
 const uploadPath = "./uploads"
 
+type Bid struct {
+	ItemId int
+	Amount float64
+}
+
 type ItemsServiceInterface interface {
 	GetItemsList(userId int) ([]*models.Item, error)
 	CreateItem(srcItem *models.Item, user *models.User) (*models.Item, error)
@@ -30,6 +35,7 @@ type ItemsServiceInterface interface {
 	GetAllItems() ([]*models.Item, error)
 	CreateItemComment(comment *models.ItemComment) (*models.ItemComment, error)
 	AttachFileToItem(itemId int, file *multipart.FileHeader) (*string, error)
+	CreateBid(bidChannel chan<- Bid, itemId int, amount float64) error
 }
 
 func GetItemService(itemRepo repositories.ItemRepositoryInterface,
@@ -135,4 +141,15 @@ func (is *ItemService) AttachFileToItem(itemId int, file *multipart.FileHeader) 
 	}
 
 	return &fullFileName, nil
+}
+
+func (is *ItemService) CreateBid(bidChannel chan<- Bid, itemId int, amount float64) error {
+	// TODO: add storing bid to DB
+	
+	bidChannel <- Bid{
+		ItemId: itemId,
+		Amount: amount,
+	}
+
+	return nil
 }
