@@ -26,7 +26,7 @@ go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@late
 # Create new migration
 ```bash
 cd db
-migrate create -ext sql -dir ./migration [migration_name]
+migrate create -ext sql -dir ./migrations [migration_name]
 ```
 
 # Run migrations
